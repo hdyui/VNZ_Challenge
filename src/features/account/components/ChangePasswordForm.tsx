@@ -16,6 +16,7 @@ interface Props {
 }
 // wefhiuwebfiwef
 
+// aloalaoa
 const ChangePasswordForm = ({ onSuccess }: Props) => {
   const { mutate: changePassword, isPending } = useChangePasswordMutation();
   const {
