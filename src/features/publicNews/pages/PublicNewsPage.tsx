@@ -22,10 +22,8 @@ const PublicNewsPage = () => {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
-  const rawData = data as any;
 
-  const newsList =
-    rawData?.value?.items || rawData?.data?.items || rawData?.items || [];
+  const newsList = data?.value?.items || [];
   const totalPages = data?.value
     ? Math.ceil(data.value.totalCount / data.value.pageSize)
     : 0;
