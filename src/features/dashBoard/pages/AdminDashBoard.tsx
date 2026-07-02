@@ -121,30 +121,30 @@ export const AdminDashboardPage = () => {
               />
               <StatCard
                 label="Nhân viên"
-                value={stats?.totalEmployees ?? "—"}
+                value={stats?.totalEmployees ?? "0"}
                 icon={Users}
                 iconBg="bg-purple-50"
-                iconColor="text-purple-500"
-                sub="Chưa có API"
-                subColor="text-gray-300"
+                iconColor="text-green-500"
+                sub="Nhân viên"
+                subColor="text-pink-400"
               />
               <StatCard
                 label="Tuyển dụng"
-                value={stats?.totalRecruitments ?? "—"}
+                value={stats?.totalRecruitments ?? "0"}
                 icon={Briefcase}
                 iconBg="bg-indigo-50"
-                iconColor="text-indigo-500"
-                sub="Chưa có API"
-                subColor="text-gray-300"
+                iconColor="text-purple-500"
+                sub="Bài viết tuyển dụng"
+                subColor="text-green-400"
               />
               <StatCard
                 label="Đang tuyển"
-                value={stats?.activeRecruitments ?? "—"}
+                value={stats?.activeRecruitments ?? "0"}
                 icon={TrendingUp}
                 iconBg="bg-rose-50"
-                iconColor="text-rose-500"
-                sub="Chưa có API"
-                subColor="text-gray-300"
+                iconColor="text-green-500"
+                sub="Đã mở"
+                subColor="text-red-400"
               />
             </>
           )}
@@ -213,7 +213,7 @@ export const AdminDashboardPage = () => {
               </span>
             </div>
           </Link>
-          <Link to="/admin/employees">
+          <Link to="/admin/accounts">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group">
               <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                 <Users className="w-4 h-4 text-purple-500" />

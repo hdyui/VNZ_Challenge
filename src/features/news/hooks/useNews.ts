@@ -100,6 +100,20 @@ export const useUploadNewsImages = (newsId: string) => {
   });
 };
 
+// ─── POST /auth/uploads (upload ảnh bìa) ──────────────────────────────────────
+export const useUploadImage = () => {
+  return useMutation({
+    mutationFn: (file: File) => newsApi.uploadImage(file),
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.detail ||
+          error.response?.data?.message ||
+          "Upload ảnh thất bại, vui lòng thử lại",
+      );
+    },
+  });
+};
+
 // ─── DELETE /news/:newsId/images/:imageId ─────────────────────────────────────
 export const useDeleteNewsImage = (newsId: string) => {
   return useMutation({

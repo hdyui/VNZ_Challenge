@@ -10,6 +10,10 @@ export type NewsStatus = "draft" | "published" | "archived";
 export const normalizeStatus = (s: string): NewsStatus =>
   s.toLowerCase() as NewsStatus;
 
+// Helper: chuyển status lowercase (nội bộ) -> PascalCase (API mong đợi khi gửi lên)
+export const denormalizeStatus = (s: NewsStatus): NewsStatusRaw =>
+  (s.charAt(0).toUpperCase() + s.slice(1)) as NewsStatusRaw;
+
 // ─── List item (từ GET /news) ───────────────────────────────────────────────
 export interface NewsListItem {
   id: string;
@@ -39,19 +43,23 @@ export interface NewsDetail extends NewsListItem {
 }
 
 // ─── Create payload (POST /news) ─────────────────────────────────────────────
+// coverImg: File khi người dùng chọn ảnh mới để upload trực tiếp trong multipart form
 export interface CreateNewsDto {
   title: string;
-  coverImg?: string;
+  slug?: string;
+  coverImg: File | string;
   contentHtml: string;
   contentJson?: object;
   status: NewsStatus;
-  imageUrls?: string[];
 }
 
 // ─── Update payload (PUT /news/:id) ──────────────────────────────────────────
+// coverImg: File nếu đổi ảnh mới; nếu là string (ảnh cũ, không đổi) thì không gửi
+// field CoverImg lên server để giữ nguyên ảnh hiện tại (xem buildNewsFormData trong services.ts)
 export interface UpdateNewsDto {
   title?: string;
-  coverImg?: string;
+  slug?: string;
+  coverImg?: File | string;
   contentHtml?: string;
   contentJson?: object;
   status?: NewsStatus;
@@ -59,8 +67,8 @@ export interface UpdateNewsDto {
 
 // ─── Query params (GET /news) ─────────────────────────────────────────────────
 export interface NewsQueryParams {
-  page?: number;
-  limit?: number;
+  pageIndex?: number; // Đổi thành pageIndex
+  pageSize?: number; // Đổi thành pageSize
   search?: string;
   status?: NewsStatus | "";
   authorId?: string;
@@ -112,4 +120,12 @@ export interface ApiResponse<T> {
   isFailed: boolean;
   error: string | null;
   traceId: string;
+}
+
+// ─── Upload ảnh (POST /auth/uploads) ──────────────────────────────────────────
+export interface UploadImageResult {
+  url: string;
+  fileName: string;
+  contentType: string;
+  size: number;
 }

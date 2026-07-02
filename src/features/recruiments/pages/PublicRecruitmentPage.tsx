@@ -154,8 +154,8 @@ const PublicRecruitmentPage = () => {
 
   const { data, isLoading } = usePublicRecruitmentList(params);
 
-  const recruitments = data?.value.items ?? [];
-  const total = data?.value.totalCount ?? 0;
+  const recruitments = data?.value?.items ?? [];
+  const total = data?.value?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / DEFAULT_LIMIT));
 
   // ── Search input with live debounce, synced back to the URL ────────────────

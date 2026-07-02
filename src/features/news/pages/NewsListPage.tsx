@@ -16,7 +16,7 @@ import {
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { useNewsList, useDeleteNews } from "../hooks/useNews";
 import { NewsStatusBadge } from "../components/NewsStatusBadge";
-import type { NewsListItem, NewsStatus } from "../type";
+import type { NewsListItem, NewsQueryParams, NewsStatus } from "../type";
 import {
   Edit,
   Eye,
@@ -26,77 +26,96 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
+import type { PublicRecruitmentQueryParams } from "@/features/publicNews/types";
 
 const LIMIT = 10;
+
+const STATUS_OPTIONS: { label: string; value: NewsStatus | "all" }[] = [
+  { label: "Tất cả", value: "all" },
+  { label: "Nháp", value: "draft" },
+  { label: "Đã xuất bản", value: "published" },
+  { label: "Lưu trữ", value: "archived" },
+];
+
+const parseStatus = (value: string | null): NewsStatus | "all" => {
+  const valid = STATUS_OPTIONS.map((o) => o.value);
+  return (valid as string[]).includes(value ?? "")
+    ? (value as NewsStatus | "all")
+    : "all";
+};
 
 export const NewsListPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  // ─── Đọc state ban đầu trực tiếp từ URL (?page=&search=&status=) ────────────
   const page = Number(searchParams.get("page")) || 1;
-  const urlSearch = searchParams.get("search") ?? "";
-  const urlStatus = (searchParams.get("status") as NewsStatus | "all") || "all";
 
-  const [searchInput, setSearchInput] = useState(urlSearch);
-  const debouncedSearch = useDebounce(searchInput.trim(), 350);
+  const urlStatus = (searchParams.get("status") as NewsStatus | "all") || "all";
   const [status, setStatus] = useState<NewsStatus | "all">(urlStatus);
 
-  const { data, isLoading } = useNewsList({
-    page,
-    limit: LIMIT,
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput.trim(), 350);
+
+  const params: NewsQueryParams = {
+    pageIndex: page, // <-- Gắn giá trị vào pageIndex
+    pageSize: LIMIT, // <-- Gắn giá trị vào pageSize
     search: debouncedSearch || undefined,
     status: status === "all" ? undefined : status,
     sortBy: "createdAt",
     sortOrder: "desc",
-  });
+  };
 
+  // 2. GỌI API
+  const { data, isLoading } = useNewsList(params);
+
+  // 3. LẤY DATA (Tuyệt chiêu vét sạch mọi lớp vỏ Axios/ReactQuery)
+  const validData = data?.data || data;
+  const items = validData?.value?.items || validData?.items || [];
+
+  // Tính tổng số trang an toàn tuyệt đối
+  const totalCount = validData?.value?.totalCount || validData?.totalCount || 0;
+  const apiTotalPages =
+    validData?.value?.pagination?.totalPages ||
+    validData?.pagination?.totalPages ||
+    validData?.value?.totalPages;
+
+  // Quét mọi ngóc ngách để tìm tổng số bài (totalCount) nếu không có sẵn totalPages
+  const apiTotalCount =
+    validData?.value?.totalCount ||
+    validData?.value?.totalItems ||
+    validData?.totalCount ||
+    0;
+
+  // Lấy kết quả cuối cùng
+  const totalPages =
+    apiTotalPages || Math.max(1, Math.ceil(apiTotalCount / LIMIT));
   const {
     mutate: deleteNews,
     isPending: isDeleting,
     variables: deletingId,
   } = useDeleteNews();
 
-  // ─── Đồng bộ mọi thay đổi filter/page vào URL ────────────────────────────────
-  const updateParams = (
-    updates: Record<string, string | undefined>,
-    resetPage = false,
-  ) => {
-    const nextParams = new URLSearchParams(searchParams);
-
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        nextParams.set(key, value);
-      } else {
-        nextParams.delete(key);
-      }
-    });
-
-    if (resetPage) {
-      nextParams.set("page", "1");
-    }
-
-    setSearchParams(nextParams);
-  };
-
-  // Khi debouncedSearch thay đổi (do người dùng gõ) → ghi vào URL + reset về trang 1
-  // Bỏ qua lần chạy đầu tiên (mount/reload) để không làm mất "page" đã lưu trong URL
-  const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    const currentUrlSearch = searchParams.get("search") || "";
+    // Chỉ reset về trang 1 khi user thực sự gõ chữ mới
+    if (debouncedSearch !== currentUrlSearch) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        next.set("page", "1");
+        return next;
+      });
     }
-    updateParams({ search: debouncedSearch || undefined }, true);
   }, [debouncedSearch]);
-
   const handleStatusChange = (val: string) => {
-    const nextStatus = val as NewsStatus | "all";
-    setStatus(nextStatus);
-    updateParams(
-      { status: nextStatus === "all" ? undefined : nextStatus },
-      true,
-    );
+    setStatus(val as NewsStatus | "all");
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (val === "all") next.delete("status");
+      else next.set("status", val);
+      next.set("page", "1");
+      return next;
+    });
   };
 
   const handleDelete = (id: string) => {
@@ -180,9 +199,6 @@ export const NewsListPage = () => {
     },
   ];
 
-  const items = data?.data?.items ?? [];
-  const pagination = data?.data?.pagination;
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
@@ -202,7 +218,6 @@ export const NewsListPage = () => {
           </Button>
         </Link>
       </div>
-
       {/* Bộ lọc */}
       <div className="grid gap-3 rounded-xl p-1 sm:grid-cols-[minmax(0,1fr)_260px] sm:items-center">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -237,15 +252,15 @@ export const NewsListPage = () => {
               <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="draft">Nháp</SelectItem>
-              <SelectItem value="published">Đã xuất bản</SelectItem>
-              <SelectItem value="archived">Lưu trữ</SelectItem>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
-
       {/* Table */}
       <Card className="shadow-sm border-gray-200">
         <CardContent className="p-0">
@@ -260,9 +275,8 @@ export const NewsListPage = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Pagination */}
-      {pagination && <UrlPagination totalPages={pagination.totalPages} />}
+      {!isLoading && <UrlPagination totalPages={totalPages} />}{" "}
     </div>
   );
 };

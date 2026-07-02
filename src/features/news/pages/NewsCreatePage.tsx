@@ -9,7 +9,7 @@ export const NewsCreatePage = () => {
   const handleCreate = (data: NewsFormSchemaType) => {
     createNews({
       title: data.title,
-      coverImg: data.coverImg || undefined,
+      coverImg: data.coverImg,
       contentHtml: data.contentHtml,
       contentJson: data.contentJson,
       status: data.status,

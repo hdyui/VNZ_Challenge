@@ -36,8 +36,8 @@ export interface PublicRecruitmentDetail {
 }
 
 export interface PublicRecruitmentQueryParams {
-  page?: number;
-  limit?: number;
+  pageIndex?: number;
+  pageSize?: number;
   search?: string;
   level?: RecruitmentLevel | "all" | "";
 }
