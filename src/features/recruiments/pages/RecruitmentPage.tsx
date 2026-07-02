@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useDeleteRecruitment,
@@ -116,7 +116,12 @@ const RecruitmentPage = () => {
     setSearchParams(nextParams);
   };
 
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (page !== 1) {
       resetToFirstPage();
     }

@@ -1,5 +1,5 @@
 // src/features/news/pages/NewsListPage.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { DataTable, type ColumnDef } from "@/shared/components/ui/DataTable";
 import { UrlPagination } from "@/shared/components/ui/UrlPagination";
@@ -29,14 +29,29 @@ import {
 
 const LIMIT = 10;
 
+const STATUS_OPTIONS: { label: string; value: NewsStatus | "all" }[] = [
+  { label: "Tất cả", value: "all" },
+  { label: "Nháp", value: "draft" },
+  { label: "Đã xuất bản", value: "published" },
+  { label: "Lưu trữ", value: "archived" },
+];
+
+const parseStatus = (value: string | null): NewsStatus | "all" => {
+  const valid = STATUS_OPTIONS.map((o) => o.value);
+  return (valid as string[]).includes(value ?? "")
+    ? (value as NewsStatus | "all")
+    : "all";
+};
+
 export const NewsListPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
+  const status = parseStatus(searchParams.get("status"));
+
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput.trim(), 350);
-  const [status, setStatus] = useState<NewsStatus | "all">("all");
 
   const { data, isLoading } = useNewsList({
     page,
@@ -59,15 +74,26 @@ export const NewsListPage = () => {
     setSearchParams(nextParams);
   };
 
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (page !== 1) {
       resetToFirstPage();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   const handleStatusChange = (val: string) => {
-    setStatus(val as NewsStatus | "all");
-    resetToFirstPage();
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (val === "all") next.delete("status");
+      else next.set("status", val);
+      next.set("page", "1");
+      return next;
+    });
   };
 
   const handleDelete = (id: string) => {
@@ -208,10 +234,11 @@ export const NewsListPage = () => {
               <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="draft">Nháp</SelectItem>
-              <SelectItem value="published">Đã xuất bản</SelectItem>
-              <SelectItem value="archived">Lưu trữ</SelectItem>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

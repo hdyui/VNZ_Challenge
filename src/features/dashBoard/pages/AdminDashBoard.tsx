@@ -121,30 +121,30 @@ export const AdminDashboardPage = () => {
               />
               <StatCard
                 label="Nhân viên"
-                value={stats?.totalEmployees ?? "—"}
+                value={stats?.totalEmployees ?? "0"}
                 icon={Users}
                 iconBg="bg-purple-50"
-                iconColor="text-purple-500"
-                sub="Chưa có API"
-                subColor="text-gray-300"
+                iconColor="text-green-500"
+                sub="Nhân viên"
+                subColor="text-pink-400"
               />
               <StatCard
                 label="Tuyển dụng"
-                value={stats?.totalRecruitments ?? "—"}
+                value={stats?.totalRecruitments ?? "0"}
                 icon={Briefcase}
                 iconBg="bg-indigo-50"
-                iconColor="text-indigo-500"
-                sub="Chưa có API"
-                subColor="text-gray-300"
+                iconColor="text-purple-500"
+                sub="Bài viết tuyển dụng"
+                subColor="text-green-400"
               />
               <StatCard
                 label="Đang tuyển"
-                value={stats?.activeRecruitments ?? "—"}
+                value={stats?.activeRecruitments ?? "0"}
                 icon={TrendingUp}
                 iconBg="bg-rose-50"
-                iconColor="text-rose-500"
-                sub="Chưa có API"
-                subColor="text-gray-300"
+                iconColor="text-green-500"
+                sub="Đã mở"
+                subColor="text-red-400"
               />
             </>
           )}
