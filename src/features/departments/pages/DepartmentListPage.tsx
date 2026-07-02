@@ -1,4 +1,3 @@
-// src/features/departments/pages/DepartmentListPage.tsx
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { DataTable, type ColumnDef } from "@/shared/components/ui/DataTable";
@@ -17,46 +16,74 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { useDepartmentList, useDeleteDepartment } from "../hooks/useDepartment";
 import { DepartmentStatusBadge } from "../components/DepartmentStatusBadge";
 import { Loader2, Search, SlidersHorizontal, Trash2 } from "lucide-react";
-import type { DepartmentListItem } from "../types";
-
+import type { ApiResponse, PaginatedResponse } from "@/shared/types/types";
+import type { DepartmentQueryParams } from "@/features/departments/types";
+import type { DepartmentListItem } from "@/features/departments/types";
+import type { AccountListItem } from "@/features/employees/type";
 const LIMIT = 10;
 
 export const DepartmentListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+
   const page = Number(searchParams.get("page")) || 1;
-
-  const [searchInput, setSearchInput] = useState("");
+  const status = searchParams.get("status") || "all";
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
   const debouncedSearch = useDebounce(searchInput.trim(), 350);
-  const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
 
-  // Map từ chuỗi "true"/"false" sang boolean hoặc undefined
-  const isActiveParam =
-    isActiveFilter === "all" ? undefined : isActiveFilter === "true";
-  // SỬA ĐOẠN GỌI HOOK
-  const { data, isLoading } = useDepartmentList({
-    page,
-    pageSize: LIMIT, // Bạn dùng pageSize chứ không phải limit
+  // 2. GỌI API DỰA TRÊN URL
+  const params: DepartmentQueryParams = {
+    pageIndex: page,
+    pageSize: LIMIT,
     search: debouncedSearch || undefined,
-    isActive: isActiveParam,
-  });
+    status: status === "all" ? undefined : status,
+  };
+  const { data, isLoading } = useDepartmentList(params);
 
   const {
     mutate: deleteDepartment,
     isPending: isDeleting,
     variables: deletingId,
   } = useDeleteDepartment();
+  const responseData = data as unknown as ApiResponse<
+    PaginatedResponse<DepartmentListItem>
+  >;
+  const paginatedData =
+    responseData?.value ||
+    (data as unknown as PaginatedResponse<DepartmentListItem>);
 
-  const resetToFirstPage = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", "1");
-    setSearchParams(nextParams);
-  };
+  const items = paginatedData?.items || [];
+  const totalCount = paginatedData?.totalCount || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / LIMIT));
 
+  // 3. FIX LỖI ĐÁ VỀ TRANG 1 KHI RELOAD
   useEffect(() => {
-    if (page !== 1) {
-      resetToFirstPage();
+    const currentUrlSearch = searchParams.get("search") || "";
+    if (debouncedSearch !== currentUrlSearch) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        next.set("page", "1");
+        return next;
+      });
     }
-  }, [debouncedSearch, isActiveFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  const handleStatusChange = (val: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (val === "all") {
+        next.delete("isActive");
+      } else {
+        next.set("isActive", val);
+      }
+      next.set("page", "1");
+      return next;
+    });
+  };
 
   const handleDelete = (id: string) => {
     if (
@@ -133,11 +160,6 @@ export const DepartmentListPage = () => {
       ),
     },
   ];
-  const rawData = data as any;
-
-  const items =
-    rawData?.value?.items || rawData?.data?.items || rawData?.items || [];
-  const pagination = data?.value ? { totalPages: data.value.totalPages } : null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -157,7 +179,6 @@ export const DepartmentListPage = () => {
           </Button>
         </Link>
       </div>
-
       {/* Filters */}
       <div className="grid gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_260px] sm:items-center">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -188,7 +209,7 @@ export const DepartmentListPage = () => {
             Trạng thái
           </div>
           <div className="w-full sm:w-auto">
-            <Select value={isActiveFilter} onValueChange={setIsActiveFilter}>
+            <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white shadow-sm">
                 <SelectValue placeholder="Tất cả trạng thái" />
               </SelectTrigger>
@@ -201,7 +222,6 @@ export const DepartmentListPage = () => {
           </div>
         </div>
       </div>
-
       {/* Table */}
       <Card className="shadow-sm border-gray-200">
         <CardContent className="p-0">
@@ -216,9 +236,8 @@ export const DepartmentListPage = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Pagination */}
-      {pagination && <UrlPagination totalPages={pagination.totalPages} />}
+      {!isLoading && <UrlPagination totalPages={totalPages} />}{" "}
     </div>
   );
 };
