@@ -10,35 +10,24 @@ import {
 
 export type UploadTarget = "avatarImg" | "coverImg";
 
-// account có thể là object hoặc mảng tuỳ response
 const pickAccount = (u: any) =>
   Array.isArray(u?.account) ? u?.account?.[0] : u?.account;
 
-// gỡ các lớp bọc thường gặp (value / data) để lấy object thật
 const unwrap = (raw: any) => raw?.value?.data ?? raw?.value ?? raw?.data ?? raw;
 
-/**
- * Hook trung tâm của trang Profile. Flow 2 bước:
- *   B1. getMe (useUser)          -> lấy userId + role + email
- *   B2. GET /users/{userId}      -> lấy chi tiết đầy đủ (departments, ...)
- * Detail ưu tiên hơn; nếu detail chưa có thì fallback dữ liệu của getMe.
- * Ngoài ra gói luôn logic upload ảnh (avatar / cover).
- *
- * Dùng chung cho cả Admin lẫn Employee.
- */
 export const useProfile = () => {
-  // ===== B1: getMe =====
+  // B1: getMe
   const { data: meData, isLoading: meLoading } = useUser();
   const me = unwrap(meData);
   const meUser = me?.user ?? me; // object user trong getMe
   const userId: string | undefined = meUser?.id;
 
-  // ===== B2: GET /users/{userId} =====
+  // B2: GET /users/{userId}
   const { data: detailData, isLoading: detailLoading } =
     useUserDetailQuery(userId);
   const detailUser = unwrap(detailData);
 
-  // ===== Gộp: ưu tiên detail, fallback getMe =====
+  // Gộp: ưu tiên detail, fallback getMe
   const userInfo = detailUser?.id ? detailUser : meUser;
 
   const account = pickAccount(detailUser) ?? pickAccount(meUser) ?? me;
@@ -53,7 +42,7 @@ export const useProfile = () => {
   // chờ getMe; nếu đã có userId thì chờ luôn detail cho khỏi nháy
   const isLoading = meLoading || (!!userId && detailLoading);
 
-  // ===== Logic upload ảnh =====
+  // Logic upload ảnh
   const { mutateAsync: uploadImage } = useUploadMutation();
   const { mutateAsync: updateProfile } = useUpdateProfileMutation();
 

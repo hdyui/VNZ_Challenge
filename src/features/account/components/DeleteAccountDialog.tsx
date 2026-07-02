@@ -12,7 +12,6 @@ import {
 import { useDeleteAccountMutation } from "../hooks/useUser";
 
 interface Props {
-  /** userId của tài khoản đang đăng nhập */
   userId?: string;
 }
 

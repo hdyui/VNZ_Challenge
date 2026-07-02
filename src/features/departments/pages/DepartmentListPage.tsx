@@ -29,13 +29,11 @@ export const DepartmentListPage = () => {
   const debouncedSearch = useDebounce(searchInput.trim(), 350);
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
 
-  // Map từ chuỗi "true"/"false" sang boolean hoặc undefined
   const isActiveParam =
     isActiveFilter === "all" ? undefined : isActiveFilter === "true";
-  // SỬA ĐOẠN GỌI HOOK
   const { data, isLoading } = useDepartmentList({
     page,
-    pageSize: LIMIT, // Bạn dùng pageSize chứ không phải limit
+    pageSize: LIMIT,
     search: debouncedSearch || undefined,
     isActive: isActiveParam,
   });

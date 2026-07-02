@@ -39,7 +39,7 @@ export const DepartmentEditPage = () => {
     );
   }
 
-  const department = data.value; // Lấy từ .value mới đúng
+  const department = data.value;
   return (
     <div className="py-4 animate-in fade-in duration-300">
       <DepartmentForm

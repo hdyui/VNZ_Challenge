@@ -14,7 +14,6 @@ import type {
 
 export const useRegisterMutation = () => {
   const navigate = useNavigate();
-  // Dùng để tạo, cập nhật hoặc xóa dữ liệu (POST, PUT, DELETE) lên server
   return useMutation({
     mutationFn: (userData: {
       fullName: string;
@@ -33,10 +32,6 @@ export const useRegisterMutation = () => {
         error.response?.data?.message || "Đăng ký thất bại, vui lòng thử lại",
       );
       console.log(error.response?.data?.message);
-    },
-
-    onSettled: () => {
-      //có thể dùng để reset form hoặc các thao tác cleanup khác
     },
   });
 };
@@ -116,39 +111,14 @@ export const useLogoutMutation = () => {
       queryClient.removeQueries();
       console.log(error.response?.data?.message);
     },
-
-    onSettled: () => {
-      //có thể dùng để reset form hoặc các thao tác cleanup khác
-    },
   });
 };
 
 export const useUser = () => {
-  // Dùng để đọc/lấy dữ liệu (GET) từ server.
   return useQuery({
-    //-----------------------------------
-    //     1. QUERY KEY: BẮT BUỘC
-    //-----------------------------------
-    queryKey: ["me"], // id của cache
+    queryKey: ["me"],
     // me: unique - id của cache để nhận dạng cache nào
     // data cùng key sẽ ghi đè lên nhau
-    // là 1 cái mảng để: linh hoạt trong việc thêm key
-    /**
-     *  Query Key Concept:
-     * - Key: = ID của Cache
-     * - Cùng key = chung cache
-     * - Khác key = khác cache
-     */
-
-    //-----------------------------------
-    //     2. QUERY FUNCTION: BẮT BUỘC
-    //-----------------------------------
     queryFn: authApi.getMe,
-
-    /**
-     * enabled: !!accessToken;
-     *
-     *
-     */
   });
 };

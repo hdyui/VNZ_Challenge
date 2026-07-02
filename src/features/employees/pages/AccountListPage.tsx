@@ -28,7 +28,6 @@ export const AccountListPage = () => {
   const [role, setRole] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
 
-  // Gọi Hook lấy danh sách
   const { data, isLoading } = useAccountList({
     page,
     pageSize: LIMIT,
@@ -37,7 +36,6 @@ export const AccountListPage = () => {
     status: status === "all" ? undefined : status,
   });
 
-  // Gọi Hook xóa tài khoản
   const {
     mutate: deleteAccount,
     isPending: isDeleting,
@@ -60,7 +58,6 @@ export const AccountListPage = () => {
     }
   };
 
-  // Cấu hình các cột của Bảng
   const columns: ColumnDef<AccountListItem>[] = [
     {
       header: "Nhân viên",
@@ -121,7 +118,6 @@ export const AccountListPage = () => {
   ];
   const rawData = data as any;
 
-  // 2. Dùng biến rawData để chọc ngoáy thoải mái không lo báo đỏ nữa
   const items =
     rawData?.value?.items || rawData?.data?.items || rawData?.items || [];
   const pagination = rawData?.value || rawData?.data || rawData;

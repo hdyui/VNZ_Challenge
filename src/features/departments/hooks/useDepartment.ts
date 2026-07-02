@@ -6,11 +6,11 @@ import { departmentApi } from "../services";
 import type { DepartmentFormValues, AddMemberFormValues } from "../schema";
 import { queryClient } from "@/lib/queryClient";
 
-// ─── Query Keys ───────────────────────────────────────────────────────────────
+// query key
 export const departmentKeys = {
   all: ["departments"] as const,
   lists: () => [...departmentKeys.all, "list"] as const,
-  // Dùng inline type cho params vì trong types.ts của bạn chưa định nghĩa DepartmentQueryParams
+  // Dùng inline type cho params vì trong types.ts chưa định nghĩa DepartmentQueryParams
   list: (params: {
     page?: number;
     pageSize?: number;
@@ -21,7 +21,7 @@ export const departmentKeys = {
   detail: (id: string) => [...departmentKeys.details(), id] as const,
 };
 
-// ─── GET /departments ─────────────────────────────────────────────────────────
+// get/ deparment
 export const useDepartmentList = (params?: {
   page?: number;
   pageSize?: number;
@@ -34,7 +34,7 @@ export const useDepartmentList = (params?: {
   });
 };
 
-// ─── GET /departments/:id ─────────────────────────────────────────────────────
+// get/ deparment /:id
 export const useDepartmentDetail = (id: string) => {
   return useQuery({
     queryKey: departmentKeys.detail(id),
@@ -43,7 +43,6 @@ export const useDepartmentDetail = (id: string) => {
   });
 };
 
-// ─── POST /departments ────────────────────────────────────────────────────────
 export const useCreateDepartment = () => {
   const navigate = useNavigate();
 
@@ -62,7 +61,6 @@ export const useCreateDepartment = () => {
   });
 };
 
-// ─── PUT /departments/:id ─────────────────────────────────────────────────────
 export const useUpdateDepartment = (id: string) => {
   const navigate = useNavigate();
 
@@ -81,7 +79,6 @@ export const useUpdateDepartment = (id: string) => {
   });
 };
 
-// ─── DELETE /departments/:id ──────────────────────────────────────────────────
 export const useDeleteDepartment = () => {
   return useMutation({
     mutationFn: (id: string) => departmentApi.deleteDepartment(id),
@@ -98,7 +95,6 @@ export const useDeleteDepartment = () => {
   });
 };
 
-// ─── POST /departments/:id/users ──────────────────────────────────────────────
 export const useAddUserToDepartment = (departmentId: string) => {
   return useMutation({
     // Type bây giờ lấy đúng AddMemberFormValues từ schema.ts của bạn
@@ -117,7 +113,6 @@ export const useAddUserToDepartment = (departmentId: string) => {
   });
 };
 
-// ─── DELETE /departments/:id/users/:userId ────────────────────────────────────
 export const useRemoveUserFromDepartment = (departmentId: string) => {
   return useMutation({
     mutationFn: (userId: string) =>

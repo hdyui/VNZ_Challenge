@@ -6,7 +6,6 @@ import { toast } from "sonner";
 export const useUpdateProfileMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // Vì hàm API cần 2 tham số (userId và data), ta bọc nó lại thành 1 object
     mutationFn: ({
       userId,
       data,
@@ -19,9 +18,6 @@ export const useUpdateProfileMutation = () => {
     onSuccess: (res) => {
       toast.success("Cập nhật hồ sơ thành công!");
 
-      // ĐÂY LÀ PHÉP THUẬT: Báo cho React Query biết data đã cũ
-      // Bác truyền đúng cái queryKey mà bác đang xài trong useUser (ở đây tui giả sử là ["me"])
-      // React Query sẽ lẳng lặng gọi lại API auth/me ngầm để lấy data mới nhất up lên UI
       queryClient.invalidateQueries({ queryKey: ["me"] });
     },
     onError: (error: any) => {
@@ -36,6 +32,6 @@ export const useUploadMutation = () => {
     mutationFn: ({ file, folder }: { file: File; folder: string }) => {
       return userApi.uploadFile(file, folder);
     },
-    // Không cần invalidateQueries ở đây vì lát nữa mình sẽ gọi tiếp updateProfile
+    // ko cần invalidateQueries ở đây vì lát nữa gọi tiếp updateProfile
   });
 };

@@ -2,9 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { accountApi } from "../services";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner"; // Hoặc thư viện toast bác đang xài (react-toastify)
+import { toast } from "sonner";
 
-// Quản lý key của React Query để dễ xóa cache
 export const accountKeys = {
   all: ["accounts"] as const,
   lists: () => [...accountKeys.all, "list"] as const,
@@ -13,7 +12,6 @@ export const accountKeys = {
   detail: (id: string) => [...accountKeys.details(), id] as const,
 };
 
-// 1. Hook Lấy danh sách
 export const useAccountList = (filters: any) => {
   return useQuery({
     queryKey: accountKeys.list(filters),
@@ -21,16 +19,14 @@ export const useAccountList = (filters: any) => {
   });
 };
 
-// 2. Hook Lấy chi tiết
 export const useAccountDetail = (id: string) => {
   return useQuery({
     queryKey: accountKeys.detail(id),
     queryFn: () => accountApi.getAccountById(id),
-    enabled: !!id, // Chỉ gọi API khi có id
+    enabled: !!id,
   });
 };
 
-// 3. Hook Tạo mới (Create)
 export const useCreateAccount = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -51,7 +47,6 @@ export const useCreateAccount = () => {
   });
 };
 
-// 4. Hook Cập nhật (Update)
 export const useUpdateAccount = (id: string) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -70,7 +65,6 @@ export const useUpdateAccount = (id: string) => {
   });
 };
 
-// 5. Hook Xóa (Delete)
 export const useDeleteAccount = () => {
   const queryClient = useQueryClient();
 
@@ -88,13 +82,11 @@ export const useDeleteAccount = () => {
   });
 };
 
-// 6. Hook Đổi mật khẩu (Reset Password)
 export const useResetPassword = (id: string) => {
   return useMutation({
     mutationFn: (data: any) => accountApi.resetPassword(id, data),
 
     onSuccess: () => {
-      // Thông báo khi thành công (Không cần invalidateQueries vì đổi pass không ảnh hưởng UI)
       toast.success("Đặt lại mật khẩu thành công!");
     },
 

@@ -6,14 +6,7 @@ import type {
   UserDto,
 } from "./type";
 
-// authApi chứa các hàm gọi API lquan đến authentication như login, register, getMe,...
-// mỗi hàm sẽ gọi apiClient để thực hiện request, sau đó normalize dữ liệu
-// trả về (nếu cần), rồi trả về cho component sử dụng
-// Ví dụ: BE trả về { message, result: { access_Token, refresh_Token } }
-// thì FE sẽ nhận { accessToken, refreshToken } để dễ dùng hơn
-
 export const authApi = {
-  // Login: Normalize result → accessToken/refreshToken
   async login(credentials: {
     email: string;
     password: string;
@@ -29,9 +22,6 @@ export const authApi = {
       "/auth/register",
       credentials,
     ) as unknown as Promise<AuthResponse>;
-
-    // BE trả: { message, result: { access_Token, refresh_Token } }
-    // FE nhận: { accessToken, refreshToken }
   },
 
   async getMe(): Promise<CurrentUserResponse> {
@@ -39,10 +29,7 @@ export const authApi = {
   },
 
   async changePassword(data: ChangePasswordRequest): Promise<any> {
-    return apiClient.put(
-      "/auth/change-password",
-      data, // 2. TRUYỀN DATA VÀO apiClient.put ĐỂ GỬI LÊN SERVER
-    );
+    return apiClient.put("/auth/change-password", data);
   },
 
   async logout(): Promise<void> {

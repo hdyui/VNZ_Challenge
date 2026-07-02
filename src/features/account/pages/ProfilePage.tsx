@@ -20,17 +20,11 @@ import ProfileInfo from "../components/ProfileInfo";
 
 interface Props {
   /**
-   * Cho phép tự xoá tài khoản. Mặc định true (employee tự xoá được).
-   * Admin có thể tắt: <ProfilePage showDelete={false} />
+   * cho admin tự xoá tài khoản - mặc định true (employee tự xoá được)
+   * admin có thể tắt: <ProfilePage showDelete={false} />
    */
   showDelete?: boolean;
 }
-
-/**
- * Trang hồ sơ DÙNG CHUNG cho cả Admin và Employee.
- * Chỉ cần import và render: <ProfilePage /> là chạy.
- * Toàn bộ data lấy từ getMe (qua useProfile) nên không phụ thuộc role.
- */
 export const ProfilePage = ({ showDelete = true }: Props) => {
   const {
     isLoading,
@@ -86,7 +80,7 @@ export const ProfilePage = ({ showDelete = true }: Props) => {
         </DialogContent>
       </Dialog>
 
-      {/* Xoá tài khoản (tuỳ chọn) */}
+      {/* Xoá tài khoản*/}
       {showDelete && <DeleteAccountDialog userId={userId} />}
     </>
   );

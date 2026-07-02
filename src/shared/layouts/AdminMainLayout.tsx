@@ -24,7 +24,7 @@ const navItems = [
     end: false,
   },
   {
-    to: "/admin/departments", // <-- Thêm menu Departments vào đây
+    to: "/admin/departments",
     label: "Departments",
     icon: Building2,
     end: false,
@@ -42,8 +42,6 @@ const AdminMainLayout = () => {
   const token = useAuthStore((state) => !!state.accessToken);
   const useHandleLogout = useLogoutMutation();
 
-  // GỌI API GET ME Ở ĐÂY
-  //const [error, setError] = useState<string | null>(null);
   const {
     data: user,
     isLoading, // true = lần đầu fetch, chưa có data, true khi đang fetch
@@ -57,7 +55,6 @@ const AdminMainLayout = () => {
     useHandleLogout.mutate();
   };
 
-  // Hàm render Avatar (Có ảnh thì hiện ảnh, không thì lấy chữ cái đầu)
   const renderAvatar = () => {
     if (user?.user?.avatarImg) {
       return (

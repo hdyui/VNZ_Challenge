@@ -4,14 +4,6 @@ import { LogOut, UserCircle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useLogoutMutation } from "@/features/auth/hooks/useAuth";
 
-/**
- * Khung bao ngoài cho khu vực Employee:
- *  - Thanh trên (logo + nút đăng xuất)
- *  - <Outlet /> = nơi các trang con (ProfilePage...) hiển thị vào
- *
- * Nếu sau này có thêm trang cho employee, chỉ cần thêm route con,
- * không phải đụng vào layout này.
- */
 const EmployeeLayout = () => {
   const { mutate: logout, isPending } = useLogoutMutation();
 

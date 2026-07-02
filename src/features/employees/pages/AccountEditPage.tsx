@@ -34,7 +34,6 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 
-// BÊ NGUYÊN DÀN DIALOG CỦA SHADCN VÀO ĐÂY
 import {
   Dialog,
   DialogContent,
@@ -42,8 +41,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/shared/components/ui/dialog";
-
-// popup reset password --- shadcn
 
 const ResetPasswordModal = ({
   isOpen,
@@ -67,15 +64,14 @@ const ResetPasswordModal = ({
   const onSubmit = (data: ResetPasswordFormValues) => {
     resetPass(data, {
       onSuccess: () => {
-        onClose(false); // Đóng Dialog khi thành công
-        reset(); // Xóa form
+        onClose(false);
+        reset();
       },
     });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* Shadcn DialogContent đã có sẵn nút X tắt mặc định nên không cần code thêm */}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl">Đặt lại mật khẩu</DialogTitle>
@@ -146,7 +142,6 @@ const ResetPasswordModal = ({
   );
 };
 
-// TRANG EDIT CHÍNH
 export const AccountEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const [isResetOpen, setIsResetOpen] = useState(false);
@@ -164,9 +159,7 @@ export const AccountEditPage = () => {
     resolver: zodResolver(UpdateAccountSchema),
   });
 
-  // Khi API lấy data cũ thành công thì nhét vào form
   useEffect(() => {
-    // Đón lõng mọi nẻo đường y như trang List
     const detail = accountData?.value || accountData?.data || accountData;
 
     if (detail) {
@@ -278,7 +271,7 @@ export const AccountEditPage = () => {
         </form>
       </Card>
 
-      {/* NHÚNG COMPONENT DIALOG VÀO ĐÂY */}
+      {/* NHÚNG COMPONENT DIALOG VÀO */}
       <ResetPasswordModal
         isOpen={isResetOpen}
         onClose={setIsResetOpen}
