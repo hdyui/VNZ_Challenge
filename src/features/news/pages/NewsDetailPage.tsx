@@ -16,22 +16,6 @@ export const NewsDetailPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading, isError } = useNewsDetail(id!);
-  const {
-    mutate: deleteImage,
-    isPending: isDeletingImage,
-    variables: deletingImageId,
-  } = useDeleteNewsImage(id!);
-  const { mutate: uploadImages, isPending: isUploading } = useUploadNewsImages(
-    id!,
-  );
-
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length > 0) {
-      uploadImages(files);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-32 text-gray-400">
