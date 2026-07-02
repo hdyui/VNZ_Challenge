@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import type { PublicRecruitmentQueryParams } from "@/features/publicNews/types";
 
-const LIMIT = 10;
+const LIMIT = 9;
 
 const STATUS_OPTIONS: { label: string; value: NewsStatus | "all" }[] = [
   { label: "Tất cả", value: "all" },
