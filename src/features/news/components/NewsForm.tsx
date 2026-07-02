@@ -1,7 +1,9 @@
 // src/features/news/components/NewsForm.tsx
-import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Loader2, Upload, X } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { NewsFormSchema, type NewsFormSchemaType } from "../schema";
 import { RichTextEditor } from "@/shared/components/ui/RichTextEditor";
 import { Button } from "@/shared/components/ui/button";
@@ -54,6 +56,7 @@ export const NewsForm = ({
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<NewsFormSchemaType>({
     resolver: zodResolver(NewsFormSchema),
@@ -67,6 +70,41 @@ export const NewsForm = ({
   });
 
   const coverImgValue = watch("coverImg");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // coverImgValue có thể là File (ảnh mới vừa chọn, chưa upload) hoặc string (URL ảnh cũ).
+  // Với File, tạo object URL tạm để preview, và luôn thu hồi URL cũ khi value đổi/unmount.
+  const [displayUrl, setDisplayUrl] = useState<string>(
+    typeof initialData?.coverImg === "string" ? initialData.coverImg : "",
+  );
+
+  useEffect(() => {
+    if (coverImgValue instanceof File) {
+      const objectUrl = URL.createObjectURL(coverImgValue);
+      setDisplayUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+    setDisplayUrl((coverImgValue as string) || "");
+  }, [coverImgValue]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn một tệp hình ảnh");
+      return;
+    }
+
+    // Chỉ giữ File trong form, sẽ upload cùng lúc với submit (multipart/form-data)
+    setValue("coverImg", file, { shouldValidate: true });
+    e.target.value = "";
+  };
+
+  const handleRemoveCoverImg = () => {
+    setValue("coverImg", "", { shouldValidate: true });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   return (
     <Card className="max-w-5xl mx-auto shadow-sm border-gray-200">
@@ -127,29 +165,67 @@ export const NewsForm = ({
 
           {/* Ảnh bìa */}
           <div className="space-y-2">
-            <Label
-              htmlFor="coverImg"
-              className="text-sm font-semibold text-gray-700"
-            >
-              URL Ảnh bìa
+            <Label className="text-sm font-semibold text-gray-700">
+              Ảnh bìa <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="coverImg"
-              {...register("coverImg")}
-              placeholder="https://example.com/image.png"
-              className="focus-visible:ring-blue-500"
+
+            {/* input file ẩn, trigger bằng nút bấm */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
             />
-            {errors.coverImg && (
-              <p className="text-xs text-red-500">{errors.coverImg.message}</p>
-            )}
-            {coverImgValue && (
-              <div className="mt-4 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+
+            {displayUrl ? (
+              <div className="relative mt-2 overflow-hidden rounded-lg border border-gray-100 bg-gray-50 group">
                 <img
-                  src={coverImgValue}
+                  src={displayUrl}
                   alt="Cover preview"
                   className="h-48 w-full object-cover"
                 />
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-1" />
+                    Đổi ảnh
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemoveCoverImg}
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Xóa
+                  </Button>
+                </div>
+                {coverImgValue instanceof File && (
+                  <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+                    Ảnh mới — sẽ tải lên khi lưu
+                  </span>
+                )}
               </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-gray-500 transition-colors hover:border-blue-400 hover:bg-blue-50/50"
+              >
+                <Upload className="w-6 h-6" />
+                <span className="text-sm">Nhấn để chọn ảnh bìa</span>
+              </button>
+            )}
+
+            {errors.coverImg && (
+              <p className="text-xs text-red-500">
+                {errors.coverImg.message as string}
+              </p>
             )}
           </div>
 

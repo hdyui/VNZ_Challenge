@@ -8,11 +8,14 @@ export const NewsFormSchema = z.object({
     .min(5, { message: "Tiêu đề phải có ít nhất 5 ký tự" })
     .max(255, { message: "Tiêu đề không được quá 255 ký tự" }),
 
-  coverImg: z
-    .string()
-    .url({ message: "URL ảnh bìa không hợp lệ" })
-    .optional()
-    .or(z.literal("")),
+  // Ảnh bìa: File khi người dùng chọn ảnh mới, hoặc string (URL) khi giữ ảnh cũ lúc edit
+  coverImg: z.union(
+    [
+      z.instanceof(File, { message: "Ảnh bìa là bắt buộc" }),
+      z.string().min(1).url({ message: "URL ảnh bìa không hợp lệ" }),
+    ],
+    { error: "Ảnh bìa là bắt buộc" },
+  ),
 
   contentHtml: z.string().min(1, { message: "Nội dung bài viết là bắt buộc" }),
 

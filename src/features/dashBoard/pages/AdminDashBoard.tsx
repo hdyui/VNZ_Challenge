@@ -213,7 +213,7 @@ export const AdminDashboardPage = () => {
               </span>
             </div>
           </Link>
-          <Link to="/admin/employees">
+          <Link to="/admin/accounts">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group">
               <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                 <Users className="w-4 h-4 text-purple-500" />
