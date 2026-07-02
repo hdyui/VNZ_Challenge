@@ -80,10 +80,12 @@ const AdminMainLayout = () => {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r h-screen sticky top-0">
         <div className="h-16 flex items-center px-6 border-b">
           <NavLink to="/admin" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center text-white font-bold">
-              P
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-sm group-hover:bg-blue-700 transition-colors">
+              V
             </div>
-            <div className="text-lg font-semibold">PiedTeam</div>
+            <span className="font-semibold text-[15px] tracking-tight text-slate-800">
+              VNZ Company
+            </span>
           </NavLink>
         </div>
 
@@ -196,7 +198,12 @@ const AdminMainLayout = () => {
         </main>
 
         <footer className="bg-white border-t p-4 text-sm text-center text-gray-500">
-          © 2026 Business Management — PiedTeam
+          <div className="justify-center flex items-center gap-2 text-[13px] text-slate-400">
+            <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">
+              V
+            </div>
+            <span>© 2026 VNZ Company. All rights reserved.</span>
+          </div>
         </footer>
       </div>
     </div>
