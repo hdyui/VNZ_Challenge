@@ -94,10 +94,9 @@ const RecruitmentPage = () => {
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput.trim(), 350);
-
   const params: PublicRecruitmentQueryParams = {
-    page,
-    limit: LIMIT,
+    pageIndex: page,
+    pageSize: LIMIT,
     search: debouncedSearch || undefined,
     level,
   };
@@ -110,24 +109,24 @@ const RecruitmentPage = () => {
   const total = data?.value?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
-  const resetToFirstPage = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", "1");
-    setSearchParams(nextParams);
-  };
-
-  const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    if (page !== 1) {
-      resetToFirstPage();
+    const currentUrlSearch = searchParams.get("search") || "";
+
+    // Chỉ reset về trang 1 khi người dùng THỰC SỰ gõ thay đổi từ khóa
+    if (debouncedSearch !== currentUrlSearch) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (debouncedSearch) next.set("search", debouncedSearch);
+          else next.delete("search");
+          next.set("page", "1");
+          return next;
+        },
+        { replace: true },
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
-
   const handleLevelChange = (val: string) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);

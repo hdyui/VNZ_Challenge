@@ -16,7 +16,7 @@ import {
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { useNewsList, useDeleteNews } from "../hooks/useNews";
 import { NewsStatusBadge } from "../components/NewsStatusBadge";
-import type { NewsListItem, NewsStatus } from "../type";
+import type { NewsListItem, NewsQueryParams, NewsStatus } from "../type";
 import {
   Edit,
   Eye,
@@ -26,6 +26,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
+import type { PublicRecruitmentQueryParams } from "@/features/publicNews/types";
 
 const LIMIT = 10;
 
@@ -48,45 +49,66 @@ export const NewsListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
-  const status = parseStatus(searchParams.get("status"));
+  const urlStatus = (searchParams.get("status") as NewsStatus | "all") || "all";
+  const [status, setStatus] = useState<NewsStatus | "all">(urlStatus);
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput.trim(), 350);
 
-  const { data, isLoading } = useNewsList({
-    page,
-    limit: LIMIT,
+  const params: NewsQueryParams = {
+    pageIndex: page, // <-- Gắn giá trị vào pageIndex
+    pageSize: LIMIT, // <-- Gắn giá trị vào pageSize
     search: debouncedSearch || undefined,
     status: status === "all" ? undefined : status,
     sortBy: "createdAt",
     sortOrder: "desc",
-  });
+  };
 
+  // 2. GỌI API
+  const { data, isLoading } = useNewsList(params);
+
+  // 3. LẤY DATA (Tuyệt chiêu vét sạch mọi lớp vỏ Axios/ReactQuery)
+  const validData = data?.data || data;
+  const items = validData?.value?.items || validData?.items || [];
+
+  // Tính tổng số trang an toàn tuyệt đối
+  const totalCount = validData?.value?.totalCount || validData?.totalCount || 0;
+  const apiTotalPages =
+    validData?.value?.pagination?.totalPages ||
+    validData?.pagination?.totalPages ||
+    validData?.value?.totalPages;
+
+  // Quét mọi ngóc ngách để tìm tổng số bài (totalCount) nếu không có sẵn totalPages
+  const apiTotalCount =
+    validData?.value?.totalCount ||
+    validData?.value?.totalItems ||
+    validData?.totalCount ||
+    0;
+
+  // Lấy kết quả cuối cùng
+  const totalPages =
+    apiTotalPages || Math.max(1, Math.ceil(apiTotalCount / LIMIT));
   const {
     mutate: deleteNews,
     isPending: isDeleting,
     variables: deletingId,
   } = useDeleteNews();
 
-  const resetToFirstPage = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", "1");
-    setSearchParams(nextParams);
-  };
-
-  const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    const currentUrlSearch = searchParams.get("search") || "";
+    // Chỉ reset về trang 1 khi user thực sự gõ chữ mới
+    if (debouncedSearch !== currentUrlSearch) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        next.set("page", "1");
+        return next;
+      });
     }
-    if (page !== 1) {
-      resetToFirstPage();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
-
   const handleStatusChange = (val: string) => {
+    setStatus(val as NewsStatus | "all");
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (val === "all") next.delete("status");
@@ -177,9 +199,6 @@ export const NewsListPage = () => {
     },
   ];
 
-  const items = data?.data?.items ?? [];
-  const pagination = data?.data?.pagination;
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
@@ -199,7 +218,6 @@ export const NewsListPage = () => {
           </Button>
         </Link>
       </div>
-
       {/* Bộ lọc */}
       <div className="grid gap-3 rounded-xl p-1 sm:grid-cols-[minmax(0,1fr)_260px] sm:items-center">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -243,7 +261,6 @@ export const NewsListPage = () => {
           </Select>
         </div>
       </div>
-
       {/* Table */}
       <Card className="shadow-sm border-gray-200">
         <CardContent className="p-0">
@@ -258,9 +275,8 @@ export const NewsListPage = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Pagination */}
-      {pagination && <UrlPagination totalPages={pagination.totalPages} />}
+      {!isLoading && <UrlPagination totalPages={totalPages} />}{" "}
     </div>
   );
 };

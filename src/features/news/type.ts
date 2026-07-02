@@ -67,8 +67,8 @@ export interface UpdateNewsDto {
 
 // ─── Query params (GET /news) ─────────────────────────────────────────────────
 export interface NewsQueryParams {
-  page?: number;
-  limit?: number;
+  pageIndex?: number; // Đổi thành pageIndex
+  pageSize?: number; // Đổi thành pageSize
   search?: string;
   status?: NewsStatus | "";
   authorId?: string;
