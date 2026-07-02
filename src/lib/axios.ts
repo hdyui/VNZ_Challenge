@@ -41,11 +41,6 @@ const processQueue = (error: unknown, token: string | null) => {
 //Response Interceptor: Xử lý lỗi chung, ví dụ 401 Unauthorized thì có thể tự động logout
 apiClient.interceptors.response.use(
   (response) => {
-    // Phase 3: C1: return data trực tiếp
-    // Component sẽ nhận được user thay vì { data: { user } }
-    // Tuy nhiên, để linh hoạt, ta có thể trả về response.data
-    // để giảm bớt số lần phải destructure ở component
-    // nhưng vẫn giữ được khả năng truy cập các trường khác nếu cần
     const body = response;
     if (body?.value !== undefined) return body.value;
     if (body?.data !== undefined) return body.data;
