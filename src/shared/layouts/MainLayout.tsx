@@ -16,8 +16,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Layout, LayoutDashboard, Menu, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/features/auth/store";
 
 const NAV_LINKS = [
   { to: "/", label: "Trang chủ" },
@@ -38,6 +39,32 @@ const Logo = () => (
 
 const MainLayout = () => {
   const { pathname } = useLocation();
+
+  const isAuthed = useAuthStore((state) => !!state.accessToken);
+  const role = useAuthStore((state) => state.role);
+  const getAuthButtonProps = () => {
+    if (!isAuthed) {
+      return {
+        to: "/login",
+        label: "Đăng nhập",
+        icon: <UserCircle className="w-4 h-4 mr-2" />,
+      };
+    }
+    if (role === "Admin") {
+      return {
+        to: "/admin",
+        label: "Dashboard",
+        icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
+      };
+    }
+    return {
+      to: "/employee",
+      label: "Hồ sơ của tôi",
+      icon: <UserCircle className="w-4 h-4 mr-2" />,
+    };
+  };
+
+  const authBtn = getAuthButtonProps();
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -71,13 +98,11 @@ const MainLayout = () => {
           </NavigationMenu>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* Desktop login */}
-            <Button
-              asChild
-              size="sm"
-              className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-            >
-              <Link to="/login">Đăng nhập</Link>
+            {/* Desktop login / Dashboard button */}
+            <Button asChild variant="default" size="sm">
+              <Link to={authBtn.to}>
+                {authBtn.icon} {authBtn.label}
+              </Link>
             </Button>
 
             {/* Mobile hamburger */}
@@ -111,11 +136,15 @@ const MainLayout = () => {
                   ))}
                 </nav>
                 <Separator className="my-4" />
+
+                {/* Mobile login / Dashboard button */}
                 <Button
                   asChild
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <Link to="/login">Đăng nhập</Link>
+                  <Link to={authBtn.to}>
+                    {authBtn.icon} {authBtn.label}
+                  </Link>
                 </Button>
               </SheetContent>
             </Sheet>

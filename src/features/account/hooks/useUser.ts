@@ -1,68 +1,51 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { useAuthStore } from "@/features/auth/store";
+import { userApi } from "../services";
+import { useAuthStore } from "../../auth/store"; // store của feature auth
 import { queryClient } from "@/lib/queryClient";
-import type { UpdateProfileRequest } from "@/features/employees/type";
-import { userApi } from "@/features/employees/services";
 
-export const useUserDetailQuery = (userId?: string) => {
-  return useQuery({
-    queryKey: ["user", userId],
-    queryFn: () => userApi.getUserById(userId as string),
-  });
+export type UpdateProfilePayload = {
+  firstName?: string;
+  lastName?: string;
+  position?: string;
+  phone?: string | null;
+  address?: string | null;
+  hobby?: string | null;
+  quote?: string | null;
+  avatarImg?: string | File | null;
+  coverImg?: string | File | null;
 };
 
-export const useUpdateProfileMutation = () => {
-  const qc = useQueryClient();
+// PUT /users/{id} — theo đúng pattern useUpdateAccount: truyền userId vào hook
+export const useUpdateProfileMutation = (userId?: string) => {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      userId,
-      data,
-    }: {
-      userId: string;
-      data: UpdateProfileRequest;
-    }) => {
-      return userApi.updateProfile(userId, data);
-    },
+    mutationFn: (data: UpdateProfilePayload) =>
+      userApi.updateProfile(userId!, data),
     onSuccess: () => {
       toast.success("Cập nhật hồ sơ thành công!");
-      qc.invalidateQueries({ queryKey: ["me"] });
-      qc.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Cập nhật hồ sơ thất bại!");
-      console.log("Lỗi update profile:", error.response?.data);
-    },
+    onError: (err: any) =>
+      toast.error(err.response?.data?.message || "Cập nhật thất bại!"),
   });
 };
 
-export const useUploadMutation = () => {
-  return useMutation({
-    mutationFn: ({ file, folder }: { file: File; folder: string }) => {
-      return userApi.uploadFile(file, folder);
-    },
-  });
-};
-
+// DELETE /users/{id} -> đăng xuất
 export const useDeleteAccountMutation = () => {
   const navigate = useNavigate();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
-
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   return useMutation({
     mutationFn: (userId: string) => userApi.deleteUser(userId),
     onSuccess: () => {
-      toast.success("Đã xoá tài khoản. Hẹn gặp lại bạn!");
+      toast.success("Đã xoá tài khoản.");
       clearAuth();
       queryClient.removeQueries();
       navigate("/login", { replace: true });
     },
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || "Xoá tài khoản thất bại, thử lại nhé!",
-      );
-      console.log("Lỗi xoá tài khoản:", error.response?.data);
-    },
+    onError: (err: any) =>
+      toast.error(err.response?.data?.message || "Xoá tài khoản thất bại!"),
   });
 };

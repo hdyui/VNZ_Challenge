@@ -11,10 +11,8 @@ import {
 } from "@/features/employees/schema";
 
 interface Props {
-  /** Gọi khi đổi mật khẩu xong (thường để đóng modal) */
   onSuccess?: () => void;
 }
-// wefhiuwebfiwef
 
 const ChangePasswordForm = ({ onSuccess }: Props) => {
   const { mutate: changePassword, isPending } = useChangePasswordMutation();

@@ -51,3 +51,10 @@ export interface DepartmentDetail {
   createdAt: string;
   updatedAt: string | null;
 }
+
+export interface DepartmentQueryParams {
+  pageIndex?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+}
