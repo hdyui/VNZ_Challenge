@@ -146,8 +146,8 @@ const PublicRecruitmentPage = () => {
   const search = searchParams.get("search") ?? "";
 
   const params: PublicRecruitmentQueryParams = {
-    page,
-    limit: DEFAULT_LIMIT,
+    pageIndex: page,
+    pageSize: DEFAULT_LIMIT,
     search,
     level,
   };
