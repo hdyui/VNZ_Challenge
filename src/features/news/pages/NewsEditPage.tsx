@@ -13,7 +13,7 @@ export const NewsEditPage = () => {
   const handleUpdate = (formData: NewsFormSchemaType) => {
     updateNews({
       title: formData.title,
-      coverImg: formData.coverImg,
+      coverImg: formData.coverImg || undefined,
       contentHtml: formData.contentHtml,
       contentJson: formData.contentJson,
       status: formData.status,
