@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { usePublicRecruitmentDetail } from "../hooks/useRecruitment";
+import {
+  useApplyRecruitment,
+  usePublicRecruitmentDetail,
+} from "../hooks/useRecruitment";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Separator } from "@/shared/components/ui/separator";
@@ -17,7 +20,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -26,17 +28,20 @@ import {
   ArrowLeft,
   BriefcaseBusiness,
   Building2,
+  CalendarClock,
   CalendarDays,
   CheckCircle2,
-  ExternalLink,
+  Clock,
+  Eye,
   Loader2,
+  MapPin,
   Send,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { RecruitmentLevel } from "../type";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
+import { WORKING_TYPE_LABELS } from "../schema";
 
 const LEVEL_COLOR: Record<RecruitmentLevel, string> = {
   all: "bg-slate-100 text-slate-700 border-slate-200",
@@ -46,8 +51,6 @@ const LEVEL_COLOR: Record<RecruitmentLevel, string> = {
   Middle: "bg-violet-50 text-violet-700 border-violet-200",
   Senior: "bg-amber-50 text-amber-700 border-amber-200",
 };
-
-// ─── Meta item ────────────────────────────────────────────────────────────────
 
 const MetaItem = ({
   icon: Icon,
@@ -59,8 +62,8 @@ const MetaItem = ({
   value: React.ReactNode;
 }) => (
   <div className="flex items-start gap-3">
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 mt-0.5 shrink-0">
-      <Icon className="h-4 w-4 text-gray-400" />
+    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 mt-0.5">
+      <Icon className="h-4 w-4 text-gray-500" />
     </div>
     <div>
       <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
@@ -105,37 +108,41 @@ const validateApply = (form: ApplyForm): ApplyError => {
 
 // ─── Apply dialog ─────────────────────────────────────────────────────────────
 
-const ApplyDialog = ({ positionTitle }: { positionTitle?: string }) => {
-  const [open, setOpen] = useState(false);
+const ApplyDialog = ({
+  open,
+  onOpenChange,
+  recruitmentId,
+  positionTitle,
+}: {
+  open: boolean;
+  onOpenChange: (val: boolean) => void;
+  recruitmentId: string;
+  positionTitle?: string;
+}) => {
   const [form, setForm] = useState<ApplyForm>(INITIAL_APPLY);
   const [errors, setErrors] = useState<ApplyError>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const { mutate: applyRecruitment, isPending } = useApplyRecruitment();
 
   const handleChange = (field: keyof ApplyForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const fieldErrors = validateApply(form);
     if (Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors);
       return;
     }
-    setIsSubmitting(true);
-    try {
-      // TODO: replace with actual mutation
-      // e.g. await applyForPosition({ recruitmentId: id, ...form });
-      await new Promise((res) => setTimeout(res, 900));
-      setSubmitted(true);
-    } finally {
-      setIsSubmitting(false);
-    }
+    applyRecruitment(
+      { recruitmentId, ...form },
+      { onSuccess: () => setSubmitted(true) },
+    );
   };
 
   const handleOpenChange = (val: boolean) => {
-    setOpen(val);
+    onOpenChange(val);
     if (!val) {
       setForm(INITIAL_APPLY);
       setErrors({});
@@ -273,17 +280,17 @@ const ApplyDialog = ({ positionTitle }: { positionTitle?: string }) => {
               <Button
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
-                disabled={isSubmitting}
+                disabled={isPending}
                 className="border-gray-200 text-gray-600"
               >
                 Hủy
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isPending}
                 className="gap-2 bg-indigo-600 hover:bg-indigo-700 min-w-[120px]"
               >
-                {isSubmitting ? (
+                {isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Đang gửi...
@@ -305,18 +312,19 @@ const ApplyDialog = ({ positionTitle }: { positionTitle?: string }) => {
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
-const PublicRecruitmentDetailPage = () => {
+const RecruitmentDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
   const { data, isLoading, isError } = usePublicRecruitmentDetail(id ?? "");
-  const detail = data?.value;
+  const [applyOpen, setApplyOpen] = useState(false);
 
-  // ── Error state ────────────────────────────────────────────────────────────
+  const detail = data?.value;
+  const isClosed = detail?.status === "Closed";
+
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/60 via-white to-white flex items-center justify-center p-6">
-        <Card className="w-full max-w-md text-center border-gray-100 shadow-sm">
+      <div className="min-h-screen bg-gray-50/50 p-6 flex items-center justify-center">
+        <Card className="w-full max-w-md text-center border-gray-200 shadow-sm">
           <CardContent className="pt-10 pb-10 space-y-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 mx-auto">
               <BriefcaseBusiness className="h-6 w-6 text-red-400" />
@@ -325,14 +333,14 @@ const PublicRecruitmentDetailPage = () => {
               Không tìm thấy vị trí
             </p>
             <p className="text-sm text-gray-500">
-              Vị trí này có thể đã bị đóng hoặc không tồn tại.
+              Vị trí này có thể đã bị gỡ bỏ hoặc không tồn tại.
             </p>
             <Button
               variant="outline"
-              onClick={() => navigate("/admin/recruitments")}
+              onClick={() => navigate("/recruitments")}
               className="mt-4 border-gray-200"
             >
-              Xem các vị trí khác
+              Quay lại danh sách
             </Button>
           </CardContent>
         </Card>
@@ -341,57 +349,65 @@ const PublicRecruitmentDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/60 via-white to-white">
-      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-4">
+    <div className="min-h-screen bg-gray-50/50 p-6">
+      <div className="mx-auto max-w-4xl space-y-6">
+        {/* Top bar: back + quick apply */}
+        <div className="flex items-center justify-between gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/admin/recruitments")}
-            className="gap-2 text-gray-500 hover:text-gray-800 -ml-2 shrink-0"
+            onClick={() => navigate("/recruitments")}
+            className="gap-2 text-gray-500 hover:text-gray-800 -ml-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Tất cả vị trí
+            Quay lại danh sách
           </Button>
 
-          {/* Quick apply in topbar (hidden on mobile) */}
-          {!isLoading && (
-            <div className="hidden sm:block">
-              <ApplyDialog positionTitle={detail?.title} />
-            </div>
+          {!isLoading && !isClosed && (
+            <Button
+              onClick={() => setApplyOpen(true)}
+              className="gap-2 bg-indigo-600 hover:bg-indigo-700 shrink-0"
+            >
+              <Send className="h-4 w-4" />
+              Ứng tuyển ngay
+            </Button>
           )}
         </div>
-      </div>
 
-      {/* ── Content ──────────────────────────────────────────────────────────── */}
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-          <aside className="lg:col-span-1 space-y-4 lg:order-2">
-            {/* Position info */}
-            <Card className="mt-23.5 border-gray-100 shadow-sm">
+        {/* Cover image */}
+        {isLoading ? (
+          <Skeleton className="h-56 w-full rounded-2xl sm:h-72" />
+        ) : (
+          detail?.coverImageUrl && (
+            <div className="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
+              <img
+                src={detail.coverImageUrl}
+                alt={detail.title}
+                className="h-56 w-full object-cover sm:h-72"
+              />
+            </div>
+          )
+        )}
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Sidebar */}
+          <div className="space-y-4">
+            {/* Meta card */}
+            <Card className="border-gray-200 shadow-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                   Thông tin vị trí
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
                   <>
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <Skeleton key={i} className="h-8 w-full" />
+                    ))}
                   </>
                 ) : (
                   <>
-                    <MetaItem
-                      icon={BriefcaseBusiness}
-                      label="Vị trí"
-                      value={detail?.title}
-                    />
-                    <Separator className="bg-gray-100" />
                     <MetaItem
                       icon={Building2}
                       label="Phòng ban"
@@ -417,6 +433,45 @@ const PublicRecruitmentDetailPage = () => {
                     />
                     <Separator className="bg-gray-100" />
                     <MetaItem
+                      icon={MapPin}
+                      label="Địa điểm"
+                      value={detail?.location || "Đang cập nhật"}
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={Clock}
+                      label="Loại hình làm việc"
+                      value={
+                        detail?.workingType
+                          ? WORKING_TYPE_LABELS[detail.workingType]
+                          : "Đang cập nhật"
+                      }
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={Users}
+                      label="Số lượng tuyển"
+                      value={
+                        detail?.hiringQuantity != null
+                          ? `${detail.hiringQuantity} người`
+                          : "Đang cập nhật"
+                      }
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={CalendarClock}
+                      label="Hạn nộp hồ sơ"
+                      value={
+                        detail?.deadline
+                          ? format(
+                              new Date(detail.deadline),
+                              "dd/MM/yyyy HH:mm",
+                            )
+                          : "Đang cập nhật"
+                      }
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
                       icon={CalendarDays}
                       label="Ngày đăng"
                       value={
@@ -425,59 +480,83 @@ const PublicRecruitmentDetailPage = () => {
                           : ""
                       }
                     />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={Eye}
+                      label="Lượt xem"
+                      value={detail?.viewCount ?? 0}
+                    />
                   </>
                 )}
               </CardContent>
             </Card>
-          </aside>
+          </div>
 
-          {/* ── Main content ─────────────────────────────────────────────────── */}
-          <div className="lg:col-span-2 space-y-6 lg:order-1">
+          {/* Main content */}
+          <div className="lg:col-span-2 space-y-5">
             {/* Title header */}
-            <div>
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-9 w-3/4" />
-                  <Skeleton className="h-5 w-1/3" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-start gap-3">
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900 leading-tight">
-                      {detail?.title}
-                    </h1>
-                    {detail?.level && (
-                      <span
-                        className={`mt-1 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${LEVEL_COLOR[detail.level]}`}
-                      >
-                        {detail.level}
-                      </span>
-                    )}
+            <Card className="border-gray-200 shadow-sm">
+              <CardContent className="pt-6 pb-6">
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-7 w-3/4" />
+                    <Skeleton className="h-4 w-1/3" />
                   </div>
-                  <p className="flex items-center gap-1.5 text-sm text-gray-500">
-                    <Building2 className="h-3.5 w-3.5" />
-                    {typeof detail?.department === "object"
-                      ? (detail.department as { name: string })?.name
-                      : detail?.department}
-                  </p>
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                        {detail?.title}
+                      </h1>
+                      <span
+                        className={`shrink-0 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${detail?.level ? LEVEL_COLOR[detail.level] : ""}`}
+                      >
+                        {detail?.level}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500">
+                      <span className="flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {typeof detail?.department === "object"
+                          ? (detail.department as { name: string })?.name
+                          : detail?.department}
+                      </span>
+                      {detail?.location && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {detail.location}
+                        </span>
+                      )}
+                      {detail?.deadline && (
+                        <span className="flex items-center gap-1.5">
+                          <CalendarClock className="h-3.5 w-3.5" />
+                          Hạn nộp:{" "}
+                          {format(
+                            new Date(detail.deadline),
+                            "dd/MM/yyyy HH:mm",
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-            {/* Job Description */}
-            <Card className="border-gray-100 shadow-sm">
+            {/* Content: mô tả công việc + yêu cầu + quyền lợi (rich text) */}
+            <Card className="border-gray-200 shadow-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Mô tả công việc
+                <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  Chi tiết công việc
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
-                  <div className="space-y-2.5">
-                    {Array.from({ length: 8 }).map((_, i) => (
+                  <div className="space-y-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
                       <Skeleton
                         key={i}
-                        className={`h-4 ${i === 7 ? "w-2/3" : "w-full"}`}
+                        className={`h-4 ${i === 5 ? "w-2/3" : "w-full"}`}
                       />
                     ))}
                   </div>
@@ -485,61 +564,55 @@ const PublicRecruitmentDetailPage = () => {
                   <div
                     className="prose prose-sm prose-gray max-w-none text-gray-700 leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: detail?.jobDescription ?? "",
+                      __html: detail?.contentHtml ?? "",
                     }}
                   />
                 )}
               </CardContent>
             </Card>
 
-            {/* Reference Info */}
-            {(isLoading || detail?.referenceInfo) && (
-              <Card className="border-gray-100 shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Thông tin tham khảo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  ) : (
-                    <div
-                      className="prose prose-sm prose-gray max-w-none text-gray-700 leading-relaxed"
-                      dangerouslySetInnerHTML={{
-                        __html: detail?.referenceInfo ?? "",
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
             {/* Bottom apply CTA */}
             {!isLoading && (
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div>
                   <p className="text-base font-semibold text-gray-900">
-                    Sẵn sàng ứng tuyển?
+                    {isClosed
+                      ? "Vị trí này hiện đã đóng tuyển"
+                      : "Sẵn sàng ứng tuyển?"}
                   </p>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    Tham gia đội ngũ của chúng tôi và tạo ra sự khác biệt.
+                    {isClosed
+                      ? "Hãy theo dõi các vị trí khác đang mở."
+                      : "Tham gia đội ngũ của chúng tôi và tạo ra sự khác biệt."}
                   </p>
                 </div>
                 <div className="w-full sm:w-auto shrink-0">
-                  <ApplyDialog positionTitle={detail?.title} />
+                  <Button
+                    onClick={() =>
+                      isClosed ? navigate("/recruitments") : setApplyOpen(true)
+                    }
+                    className="w-full sm:w-auto gap-2 bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    <Send className="h-4 w-4" />
+                    {isClosed ? "Xem các vị trí khác" : "Ứng tuyển ngay"}
+                  </Button>
                 </div>
               </div>
             )}
           </div>
         </div>
-      </main>
+      </div>
+
+      {detail && (
+        <ApplyDialog
+          open={applyOpen}
+          onOpenChange={setApplyOpen}
+          recruitmentId={detail.id}
+          positionTitle={detail.title}
+        />
+      )}
     </div>
   );
 };
 
-export default PublicRecruitmentDetailPage;
+export default RecruitmentDetails;
