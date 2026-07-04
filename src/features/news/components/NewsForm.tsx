@@ -1,14 +1,15 @@
 // src/features/news/components/NewsForm.tsx
-import { useEffect, useRef, useState } from "react";
-import { Loader2, Upload, X } from "lucide-react";
+import { useMemo, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { NewsFormSchema, type NewsFormSchemaType } from "../schema";
-import { RichTextEditor } from "@/shared/components/ui/RichTextEditor";
+import { useNavigate } from "react-router-dom";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import { Loader2, Save } from "lucide-react";
+
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -16,273 +17,244 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import type { NewsStatus } from "../type";
-import { Link } from "react-router-dom";
+
+import { NewsFormSchema, type NewsFormSchemaType } from "../schema";
+import { newsApi } from "../services";
+import { CoverImageUploader } from "./CoverImageUploader";
 
 interface NewsFormProps {
-  initialData?: {
-    title: string;
-    coverImg: string;
-    contentHtml: string;
-    contentJson?: object;
-    status: NewsStatus;
-  };
+  initialData?: Partial<NewsFormSchemaType>;
   onSubmit: (data: NewsFormSchemaType) => void;
   isLoading?: boolean;
   isEdit?: boolean;
 }
 
-const STATUS_OPTIONS: { value: NewsStatus; label: string }[] = [
-  { value: "draft", label: "Nháp" },
-  { value: "published", label: "Xuất bản" },
-  { value: "archived", label: "Lưu trữ" },
-];
+const DEFAULT_VALUES: NewsFormSchemaType = {
+  title: "",
+  coverImg: "",
+  contentHtml: "",
+  contentJson: undefined,
+  status: "draft",
+};
 
 export const NewsForm = ({
   initialData,
   onSubmit,
-  isLoading = false,
-  isEdit = false,
+  isLoading,
+  isEdit,
 }: NewsFormProps) => {
+  const navigate = useNavigate();
+  const quillRef = useRef<ReactQuill>(null);
+
   const {
-    register,
-    handleSubmit,
     control,
-    watch,
-    setValue,
+    handleSubmit,
     formState: { errors },
   } = useForm<NewsFormSchemaType>({
     resolver: zodResolver(NewsFormSchema),
-    defaultValues: {
-      title: initialData?.title ?? "",
-      coverImg: initialData?.coverImg ?? "",
-      contentHtml: initialData?.contentHtml ?? "",
-      contentJson: initialData?.contentJson,
-      status: initialData?.status ?? "draft",
-    },
+    defaultValues: { ...DEFAULT_VALUES, ...initialData },
   });
 
-  const coverImgValue = watch("coverImg");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // ─── Xử lý chèn ảnh trong nội dung bài viết (toolbar "image") ────────────
+  const imageHandler = useMemo(
+    () =>
+      async function (this: any) {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "image/*");
+        input.click();
 
-  // coverImgValue có thể là File (ảnh mới vừa chọn, chưa upload) hoặc string (URL ảnh cũ).
-  // Với File, tạo object URL tạm để preview, và luôn thu hồi URL cũ khi value đổi/unmount.
-  const [displayUrl, setDisplayUrl] = useState<string>(
-    typeof initialData?.coverImg === "string" ? initialData.coverImg : "",
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+
+          const editor = quillRef.current?.getEditor();
+          const range = editor?.getSelection(true);
+          if (!editor || !range) return;
+
+          // Chèn placeholder trong lúc upload
+          editor.insertText(range.index, "Đang tải ảnh lên...", "italic", true);
+
+          try {
+            const res = await newsApi.uploadImage(file);
+            const url =
+              (res.data as any)?.url ?? (res.data as any)?.urlImage ?? "";
+
+            editor.deleteText(range.index, "Đang tải ảnh lên...".length);
+            if (url) {
+              editor.insertEmbed(range.index, "image", url, "user");
+              editor.setSelection(range.index + 1, 0);
+            }
+          } catch {
+            editor.deleteText(range.index, "Đang tải ảnh lên...".length);
+          }
+        };
+      },
+    [],
   );
 
-  useEffect(() => {
-    if (coverImgValue instanceof File) {
-      const objectUrl = URL.createObjectURL(coverImgValue);
-      setDisplayUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-    setDisplayUrl((coverImgValue as string) || "");
-  }, [coverImgValue]);
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          [{ header: [1, 2, 3, false] }],
+          ["bold", "italic", "underline", "strike"],
+          [{ color: [] }, { background: [] }],
+          [{ list: "ordered" }, { list: "bullet" }],
+          [{ align: [] }],
+          ["blockquote", "link", "image"],
+          ["clean"],
+        ],
+        handlers: {
+          image: imageHandler,
+        },
+      },
+    }),
+    [imageHandler],
+  );
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn một tệp hình ảnh");
-      return;
-    }
-
-    // Chỉ giữ File trong form, sẽ upload cùng lúc với submit (multipart/form-data)
-    setValue("coverImg", file, { shouldValidate: true });
-    e.target.value = "";
-  };
-
-  const handleRemoveCoverImg = () => {
-    setValue("coverImg", "", { shouldValidate: true });
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const submit = (data: NewsFormSchemaType) => {
+    const editor = quillRef.current?.getEditor();
+    const contentJson = editor ? editor.getContents() : data.contentJson;
+    onSubmit({ ...data, contentJson });
   };
 
   return (
-    <Card className="max-w-5xl mx-auto shadow-sm border-gray-200">
-      <CardHeader>
-        <CardTitle className="text-2xl text-gray-800">
-          {isEdit ? "Cập nhật bài viết" : "Tạo bài viết mới"}
-        </CardTitle>
-      </CardHeader>
-
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-6">
-          {/* Tiêu đề */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="title"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Tiêu đề bài viết <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="title"
-              {...register("title")}
-              placeholder="Nhập tiêu đề ấn tượng..."
-              className="focus-visible:ring-blue-500"
-            />
-            {errors.title && (
-              <p className="text-xs text-red-500">{errors.title.message}</p>
-            )}
-          </div>
-
-          {/* Trạng thái */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-700">
-              Trạng thái <span className="text-red-500">*</span>
-            </Label>
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.status && (
-              <p className="text-xs text-red-500">{errors.status.message}</p>
-            )}
-          </div>
-
-          {/* Ảnh bìa */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-700">
-              Ảnh bìa <span className="text-red-500">*</span>
-            </Label>
-
-            {/* input file ẩn, trigger bằng nút bấm */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-
-            {displayUrl ? (
-              <div className="relative mt-2 overflow-hidden rounded-lg border border-gray-100 bg-gray-50 group">
-                <img
-                  src={displayUrl}
-                  alt="Cover preview"
-                  className="h-48 w-full object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-1" />
-                    Đổi ảnh
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleRemoveCoverImg}
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Xóa
-                  </Button>
-                </div>
-                {coverImgValue instanceof File && (
-                  <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
-                    Ảnh mới — sẽ tải lên khi lưu
-                  </span>
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex h-48 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 text-gray-500 transition-colors hover:border-blue-400 hover:bg-blue-50/50"
-              >
-                <Upload className="w-6 h-6" />
-                <span className="text-sm">Nhấn để chọn ảnh bìa</span>
-              </button>
-            )}
-
-            {errors.coverImg && (
-              <p className="text-xs text-red-500">
-                {errors.coverImg.message as string}
-              </p>
-            )}
-          </div>
-
-          {/* Nội dung Rich Text */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-700">
-              Nội dung bài viết <span className="text-red-500">*</span>
-            </Label>
-            <Controller
-              name="contentHtml"
-              control={control}
-              render={({ field }) => (
-                <div className="border rounded-md overflow-hidden">
-                  <RichTextEditor
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </div>
-              )}
-            />
-            {errors.contentHtml && (
-              <p className="text-xs text-red-500">
-                {errors.contentHtml.message}
-              </p>
-            )}
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex justify-end gap-3 bg-gray-50/50 px-6 py-4 border-t">
-          <Link to="/admin/news" tabIndex={isLoading ? -1 : 0}>
-            <Button
-              variant="outline"
-              type="button"
-              disabled={isLoading}
-              className="w-24 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Hủy
-            </Button>
-          </Link>
+    <form onSubmit={handleSubmit(submit)} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            {isEdit ? "Chỉnh sửa bài viết" : "Viết bài mới"}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {isEdit
+              ? "Cập nhật nội dung và thông tin bài viết"
+              : "Tạo một bài viết tin tức mới"}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/admin/news")}
+            disabled={isLoading}
+          >
+            Hủy
+          </Button>
           <Button
             type="submit"
+            className="bg-blue-600 hover:bg-blue-700"
             disabled={isLoading}
-            className="w-40 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang lưu...
-              </>
-            ) : isEdit ? (
-              "Lưu thay đổi"
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              "Xuất bản ngay"
+              <Save className="h-4 w-4" />
             )}
+            {isEdit ? "Lưu thay đổi" : "Đăng bài"}
           </Button>
-        </CardFooter>
-      </form>
-    </Card>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Cột chính: tiêu đề + nội dung */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="shadow-sm border-gray-200">
+            <CardContent className="p-5 space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Tiêu đề
+              </label>
+              <Controller
+                name="title"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    placeholder="Nhập tiêu đề bài viết..."
+                    className="h-11 rounded-xl border-gray-200 bg-slate-50 text-base focus:bg-white focus:border-blue-300"
+                  />
+                )}
+              />
+              {errors.title && (
+                <p className="text-xs text-red-500">{errors.title.message}</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-gray-200 overflow-visible">
+            <CardContent className="p-5 space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Nội dung
+              </label>
+              <Controller
+                name="contentHtml"
+                control={control}
+                render={({ field }) => (
+                  <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                    <ReactQuill
+                      ref={quillRef}
+                      theme="snow"
+                      value={field.value}
+                      onChange={field.onChange}
+                      modules={modules}
+                      placeholder="Nhập nội dung bài viết..."
+                      className="[&_.ql-container]:min-h-[360px] [&_.ql-container]:text-base"
+                    />
+                  </div>
+                )}
+              />
+              {errors.contentHtml && (
+                <p className="text-xs text-red-500">
+                  {errors.contentHtml.message}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cột phụ: trạng thái + ảnh bìa */}
+        <div className="space-y-6">
+          <Card className="shadow-sm border-gray-200">
+            <CardContent className="p-5 space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Trạng thái
+              </label>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Nháp</SelectItem>
+                      <SelectItem value="published">Đã xuất bản</SelectItem>
+                      <SelectItem value="archived">Lưu trữ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-gray-200">
+            <CardContent className="p-5">
+              <Controller
+                name="coverImg"
+                control={control}
+                render={({ field }) => (
+                  <CoverImageUploader
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isLoading}
+                  />
+                )}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </form>
   );
 };

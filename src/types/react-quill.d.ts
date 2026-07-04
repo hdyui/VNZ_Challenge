@@ -1,5 +1,5 @@
 // Temporary module declaration for react-quill (no official @types available)
-declare module "react-quill" {
+declare module "react-quill-new" {
   import * as React from "react";
 
   type QuillChangeHandler = (

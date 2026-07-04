@@ -59,12 +59,13 @@ type FieldError = Partial<Record<keyof FormState, string>>;
 
 const validate = (form: FormState): FieldError => {
   const errors: FieldError = {};
+  const jobDescription = (form.jobDescription ?? "").trim();
+
   if (!form.title.trim()) errors.title = "Tiêu đề là bắt buộc.";
   if (!form.departmentId.trim()) errors.departmentId = "Phòng ban là bắt buộc.";
   if (!form.level) errors.level = "Cấp bậc là bắt buộc.";
   if (!form.status) errors.status = "Trạng thái là bắt buộc.";
-  if (!form.jobDescription.trim())
-    errors.jobDescription = "Mô tả công việc là bắt buộc.";
+  if (!jobDescription) errors.jobDescription = "Mô tả công việc là bắt buộc.";
   return errors;
 };
 
@@ -122,8 +123,8 @@ const RecruitmentCreatePage = () => {
         departmentId: form.departmentId,
         level: form.level as RecruitmentLevel,
         status: form.status as RecruitmentStatus,
-        jobDescription: form.jobDescription,
-        referenceInfo: form.referenceInfo,
+        jobDescription: form.jobDescription ?? "",
+        referenceInfo: form.referenceInfo ?? "",
       },
       {
         onSuccess: () => navigate("/admin/recruitments"),
@@ -278,7 +279,7 @@ const RecruitmentCreatePage = () => {
                 className={`resize-none border-gray-200 focus-visible:ring-indigo-500 leading-relaxed ${errors.jobDescription ? "border-red-300 focus-visible:ring-red-400" : ""}`}
               />
               <p className="text-xs text-gray-400 mt-1">
-                {form.jobDescription.length} ký tự
+                {(form.jobDescription ?? "").length} ký tự
               </p>
             </FieldWrapper>
 

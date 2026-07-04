@@ -1,18 +1,20 @@
 // src/features/publicNews/pages/PublicNewsDetailPage.tsx
 import { useParams, Link } from "react-router-dom";
-import { usePublicNewsDetail } from "@/features/publicNews/hooks/usePublicNewsList";
+import { usePublicNewsDetail } from "../hooks/usePublicNewsList";
+import CommentSection from "../components/CommentSection";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Separator } from "@/shared/components/ui/separator";
 import { Button } from "@/shared/components/ui/button";
-import { ChevronLeft, CalendarDays, UserRound } from "lucide-react";
+import { ChevronLeft, CalendarDays, Eye } from "lucide-react";
 
 const PublicNewsDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data, isLoading, isError } = usePublicNewsDetail(slug ?? "");
 
   const rawData = data as any;
-
-  const news = rawData?.value || [];
+  // Sửa bug: fallback phải là null/undefined (không phải mảng rỗng),
+  // để check `!news` bên dưới hoạt động đúng khi bài viết không tồn tại.
+  const news = rawData?.value ?? null;
 
   // ─── Error ───────────────────────────────────────────────────────────────────
   if (isError) {
@@ -97,6 +99,10 @@ const PublicNewsDetailPage = () => {
             day: "numeric",
           })}
         </span>
+        <span className="flex items-center gap-1.5">
+          <Eye className="h-4 w-4" />
+          {(news.viewCount ?? 0).toLocaleString("vi-VN")} lượt xem
+        </span>
       </div>
 
       <Separator className="mb-8" />
@@ -112,7 +118,7 @@ const PublicNewsDetailPage = () => {
         </div>
       )}
 
-      {/* Content */}
+      {/* Content (bao gồm cả ảnh chèn trong bài, khác với cover image) */}
       <article
         className="prose prose-gray max-w-none
           prose-headings:font-semibold prose-headings:text-gray-800
@@ -121,6 +127,11 @@ const PublicNewsDetailPage = () => {
           prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
         dangerouslySetInnerHTML={{ __html: news.contentHtml }}
       />
+
+      <Separator className="my-10" />
+
+      {/* Comment section */}
+      <CommentSection newsId={news.id} />
 
       <Separator className="my-10" />
 

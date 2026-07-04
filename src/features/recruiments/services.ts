@@ -10,7 +10,7 @@ import type {
   UpdateRecruitmentPayload,
 } from "./type";
 
-// ─── GET /public/recruitments ────────────────────────────────────────────────
+// ─── GET /recruitments/public ────────────────────────────────────────────────
 export const publicApi = {
   // ─── GET /departments ─────────────────────────────────────────────────────────
   async getDepartments(): Promise<ApiResponse<PaginatedResponse<Department>>> {
@@ -22,7 +22,7 @@ export const publicApi = {
   async getRecruitmentList(
     params?: PublicRecruitmentQueryParams,
   ): Promise<ApiResponse<PaginatedResponse<PublicRecruitmentItem>>> {
-    return apiClient.get("/public/recruitments", {
+    return apiClient.get("/recruitments/public", {
       params,
     }) as unknown as Promise<
       ApiResponse<PaginatedResponse<PublicRecruitmentItem>>

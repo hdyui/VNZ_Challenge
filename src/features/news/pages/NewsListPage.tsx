@@ -190,7 +190,9 @@ export const NewsListPage = () => {
             size="icon"
             variant="ghost"
             className="h-8 text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
-            onClick={() => navigate(`/admin/news/${item.id}`)}
+            onClick={() => {
+              handleDelete(item.id);
+            }}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

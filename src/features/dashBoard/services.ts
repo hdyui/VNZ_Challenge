@@ -18,14 +18,14 @@ export const dashboardApi = {
       accountsRes,
       recruitmentsRes,
     ] = await Promise.all([
-      apiClient.get("/public/news", {
-        params: { page: 1, limit: 1 },
+      apiClient.get("/news/public", {
+        params: { page: 1, limit: 100 },
       }) as unknown as Promise<any>,
-      apiClient.get("/public/news", {
-        params: { page: 1, limit: 1, status: "Published" },
+      apiClient.get("/news/public", {
+        params: { page: 1, limit: 100, status: "Published" },
       }) as unknown as Promise<any>,
-      apiClient.get("/public/news", {
-        params: { page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" },
+      apiClient.get("/news/public", {
+        params: { page: 1, limit: 100, sortBy: "createdAt", sortOrder: "desc" },
       }) as unknown as Promise<any>,
 
       // ── Nhân viên: tổng số account trong hệ thống ─────────────────────
