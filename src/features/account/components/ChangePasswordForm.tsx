@@ -13,6 +13,7 @@ import {
 interface Props {
   onSuccess?: () => void;
 }
+
 const ChangePasswordForm = ({ onSuccess }: Props) => {
   const { mutate: changePassword, isPending } = useChangePasswordMutation();
   const {

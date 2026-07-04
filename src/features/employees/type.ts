@@ -84,3 +84,11 @@ export interface AccountDetail {
   createdAt: string;
   updatedAt: string | null;
 }
+
+export interface AccountQueryParams {
+  pageIndex?: number;
+  pageSize?: number;
+  search?: string;
+  role?: string;
+  status?: string;
+}

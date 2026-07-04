@@ -27,23 +27,14 @@ export const dashboardApi = {
       apiClient.get("/news/public", {
         params: { page: 1, limit: 100, sortBy: "createdAt", sortOrder: "desc" },
       }) as unknown as Promise<any>,
-
-      // ── Nhân viên: tổng số account trong hệ thống ─────────────────────
-      // ⚠️ Nếu "Nhân viên" chỉ nên tính role = "Employee" (không tính Admin),
-      // thêm role: "Employee" vào params bên dưới.
       accountApi.getAccounts({
         page: 1,
         pageSize: 1,
       }) as unknown as Promise<any>,
 
-      // ── Tuyển dụng ─────────────────────────────────────────────────────
-      // PublicRecruitmentQueryParams không có param `status`, nên lấy nguyên list
-      // rồi tự filter status === "Open" ở FE để tính "Đang tuyển".
-      // ⚠️ limit đặt tạm 100 để cover hầu hết trường hợp. Nếu tổng recruitment > 100,
-      // cần đổi sang phân trang thật hoặc xin BE thêm filter status.
       publicApi.getRecruitmentList({
-        page: 1,
-        limit: 100,
+        pageIndex: 1,
+        pageSize: 100,
       }) as unknown as Promise<any>,
     ]);
 

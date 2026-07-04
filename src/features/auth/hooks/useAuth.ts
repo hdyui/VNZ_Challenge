@@ -12,29 +12,34 @@ import type {
   LoginRequest,
 } from "../type";
 
-export const useRegisterMutation = () => {
-  const navigate = useNavigate();
-  return useMutation({
-    mutationFn: (userData: {
-      fullName: string;
-      email: string;
-      password: string; //truyền vào dư ko cần định nghĩa cũng k lỗi
-    }) => authApi.register(userData),
+// export const useRegisterMutation = () => {
+//   const navigate = useNavigate();
+//   // Dùng để tạo, cập nhật hoặc xóa dữ liệu (POST, PUT, DELETE) lên server
+//   return useMutation({
+//     mutationFn: (userData: {
+//       fullName: string;
+//       email: string;
+//       password: string; //truyền vào dư ko cần định nghĩa cũng k lỗi
+//     }) => authApi.register(userData),
 
-    onSuccess: () => {
-      toast.success("Đăng ký thành công");
-      const from = (location as any)?.from?.pathname || "/profile";
-      navigate(from, { replace: true });
-    },
+//     onSuccess: () => {
+//       toast.success("Đăng ký thành công");
+//       const from = (location as any)?.from?.pathname || "/profile";
+//       navigate(from, { replace: true });
+//     },
 
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || "Đăng ký thất bại, vui lòng thử lại",
-      );
-      console.log(error.response?.data?.message);
-    },
-  });
-};
+//     onError: (error: any) => {
+//       toast.error(
+//         error.response?.data?.message || "Đăng ký thất bại, vui lòng thử lại",
+//       );
+//       console.log(error.response?.data?.message);
+//     },
+
+//     onSettled: () => {
+//       //có thể dùng để reset form hoặc các thao tác cleanup khác
+//     },
+//   });
+// };
 
 export const useLoginMutation = () => {
   const navigate = useNavigate();
@@ -73,7 +78,7 @@ export const useChangePasswordMutation = () => {
     },
     onError: (error: any) => {
       const errorMsg =
-        error.response?.data?.errors?.[0]?.message ||
+        error.response?.data?.errors?.message ||
         error.response?.data?.message ||
         "Đổi mật khẩu thất bại, vui lòng kiểm tra lại!";
       toast.error(errorMsg);
@@ -116,9 +121,8 @@ export const useLogoutMutation = () => {
 
 export const useUser = () => {
   return useQuery({
-    queryKey: ["me"],
-    // me: unique - id của cache để nhận dạng cache nào
-    // data cùng key sẽ ghi đè lên nhau
+    queryKey: ["me"], // id của cache
+
     queryFn: authApi.getMe,
   });
 };

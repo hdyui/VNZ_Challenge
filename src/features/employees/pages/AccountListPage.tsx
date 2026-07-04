@@ -13,44 +13,77 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import type { AccountListItem } from "../type";
 import { Loader2, Search, Trash2, Edit } from "lucide-react";
+
 import { useAccountList, useDeleteAccount } from "../hooks/useAccount";
+import type { AccountListItem } from "../type";
+import type { ApiResponse, PaginatedResponse } from "@/shared/types/types";
+import type { AccountQueryParams } from "@/features/employees/type";
 
 const LIMIT = 10;
 
 export const AccountListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+
   const page = Number(searchParams.get("page")) || 1;
+  const role = searchParams.get("role") || "all";
+  const status = searchParams.get("status") || "all";
 
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
   const debouncedSearch = useDebounce(searchInput.trim(), 350);
-  const [role, setRole] = useState<string>("all");
-  const [status, setStatus] = useState<string>("all");
 
-  const { data, isLoading } = useAccountList({
-    page,
+  const params: AccountQueryParams = {
+    pageIndex: page,
     pageSize: LIMIT,
     search: debouncedSearch || undefined,
     role: role === "all" ? undefined : role,
     status: status === "all" ? undefined : status,
-  });
+  };
 
+  const { data, isLoading } = useAccountList(params);
   const {
     mutate: deleteAccount,
     isPending: isDeleting,
     variables: deletingId,
   } = useDeleteAccount();
 
-  const resetToFirstPage = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", "1");
-    setSearchParams(nextParams);
-  };
+  // Ép kiểu an toàn (bao trọn cả trường hợp Axios giữ vỏ 'value' hoặc đã lột sẵn)
+  const responseData = data as unknown as ApiResponse<
+    PaginatedResponse<AccountListItem>
+  >;
+  const paginatedData =
+    responseData?.value ||
+    (data as unknown as PaginatedResponse<AccountListItem>);
+
+  const items = paginatedData?.items || [];
+  const totalCount = paginatedData?.totalCount || 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / LIMIT));
 
   useEffect(() => {
-    if (page !== 1) resetToFirstPage();
-  }, [debouncedSearch, role, status]);
+    const currentUrlSearch = searchParams.get("search") || "";
+    if (debouncedSearch !== currentUrlSearch) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        next.set("page", "1");
+        return next;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+
+  const handleFilterChange = (key: string, val: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (val === "all") next.delete(key);
+      else next.set(key, val);
+      next.set("page", "1");
+      return next;
+    });
+  };
 
   const handleDelete = (id: string) => {
     if (window.confirm("Bác có chắc chắn muốn xóa/khóa tài khoản này không?")) {
@@ -116,11 +149,7 @@ export const AccountListPage = () => {
       ),
     },
   ];
-  const rawData = data as any;
 
-  const items =
-    rawData?.value?.items || rawData?.data?.items || rawData?.items || [];
-  const pagination = rawData?.value || rawData?.data || rawData;
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
@@ -149,7 +178,10 @@ export const AccountListPage = () => {
             className="pl-10"
           />
         </div>
-        <Select value={role} onValueChange={setRole}>
+        <Select
+          value={role}
+          onValueChange={(val) => handleFilterChange("role", val)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="All" />
           </SelectTrigger>
@@ -159,7 +191,10 @@ export const AccountListPage = () => {
             <SelectItem value="Employee">Employee</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={status} onValueChange={setStatus}>
+        <Select
+          value={status}
+          onValueChange={(val) => handleFilterChange("status", val)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="All status" />
           </SelectTrigger>
@@ -180,7 +215,8 @@ export const AccountListPage = () => {
           )}
         </CardContent>
       </Card>
-      {pagination && <UrlPagination totalPages={pagination.totalPages || 1} />}
+
+      {!isLoading && <UrlPagination totalPages={totalPages} />}
     </div>
   );
 };

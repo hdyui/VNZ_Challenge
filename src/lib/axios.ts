@@ -8,24 +8,13 @@ import { toast } from "sonner";
 
 // Create instance
 const apiClient = axios.create({
-  baseURL: env.API_URL, // Nhớ config .env, config biến môi trường
-  // timeout: 15_000, // 15s timeout
+  baseURL: env.API_URL,
   withCredentials: true, // gửi - nhận cookie nếu có (dùng cho auth)
 });
 
 //Request Interceptor: Attach Token: tự động thêm token vào header Authorization nếu có
 apiClient.interceptors.request.use(
   (config) => {
-    if (config.data instanceof FormData) {
-      const headers = config.headers as any;
-      if (typeof headers.delete === "function") {
-        headers.delete("Content-Type");
-      } else {
-        delete headers["Content-Type"];
-        delete headers["content-type"];
-      }
-    }
-
     const accessToken = useAuthStore.getState().accessToken; // lấy token từ auth store
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -52,11 +41,6 @@ const processQueue = (error: unknown, token: string | null) => {
 //Response Interceptor: Xử lý lỗi chung, ví dụ 401 Unauthorized thì có thể tự động logout
 apiClient.interceptors.response.use(
   (response) => {
-    // Phase 3: C1: return data trực tiếp
-    // Component sẽ nhận được user thay vì { data: { user } }
-    // Tuy nhiên, để linh hoạt, ta có thể trả về response.data
-    // để giảm bớt số lần phải destructure ở component
-    // nhưng vẫn giữ được khả năng truy cập các trường khác nếu cần
     const body = response;
     if (body?.value !== undefined) return body.value;
     if (body?.data !== undefined) return body.data;
