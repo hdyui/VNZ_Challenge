@@ -239,7 +239,7 @@ export const NewsForm = ({
           </Card>
 
           <Card className="shadow-sm border-gray-200">
-            <CardContent className="p-5">
+            <CardContent className="p-5 space-y-2">
               <Controller
                 name="coverImg"
                 control={control}
@@ -251,6 +251,11 @@ export const NewsForm = ({
                   />
                 )}
               />
+              {errors.coverImg && (
+                <p className="text-xs text-red-500">
+                  {errors.coverImg.message as string}
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

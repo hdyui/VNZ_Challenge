@@ -55,7 +55,7 @@ export const NewsListPage = () => {
 
   const { data, isLoading } = useNewsList({
     page,
-    limit: LIMIT,
+    pageSize: LIMIT,
     search: debouncedSearch || undefined,
     status: status === "all" ? undefined : status,
     sortBy: "createdAt",
@@ -79,9 +79,6 @@ export const NewsListPage = () => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
-    }
-    if (page !== 1) {
-      resetToFirstPage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
