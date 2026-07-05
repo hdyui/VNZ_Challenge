@@ -34,6 +34,7 @@ const DEFAULT_VALUES: NewsFormSchemaType = {
   coverImg: "",
   contentHtml: "",
   contentJson: undefined,
+  type: "Public",
   status: "draft",
 };
 
@@ -115,7 +116,12 @@ export const NewsForm = ({
 
   const submit = (data: NewsFormSchemaType) => {
     const editor = quillRef.current?.getEditor();
-    const contentJson = editor ? editor.getContents() : data.contentJson;
+    // BE nhận contentJson là string, nên phải JSON.stringify() Delta object
+    // trước khi gửi đi — nếu gửi thẳng object sẽ bị lỗi
+    // "The JSON value could not be converted to System.String".
+    const contentJson = editor
+      ? JSON.stringify(editor.getContents())
+      : data.contentJson;
     onSubmit({ ...data, contentJson });
   };
 
@@ -214,6 +220,32 @@ export const NewsForm = ({
 
         {/* Cột phụ: trạng thái + ảnh bìa */}
         <div className="space-y-6">
+          <Card className="shadow-sm border-gray-200">
+            <CardContent className="p-5 space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Loại tin
+              </label>
+              <Controller
+                name="type"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Public">Công khai</SelectItem>
+                      <SelectItem value="Internal">Nội bộ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.type && (
+                <p className="text-xs text-red-500">{errors.type.message}</p>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="shadow-sm border-gray-200">
             <CardContent className="p-5 space-y-2">
               <label className="text-sm font-medium text-gray-700">

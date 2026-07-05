@@ -1,19 +1,25 @@
 // src/features/publicNews/components/CommentItem.tsx
 import { useState } from "react";
-import { Trash2, EyeOff, CornerDownRight } from "lucide-react";
+import {
+  Trash2,
+  EyeOff,
+  CornerDownRight,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { useNewsComments } from "../hooks/usePublicNewsList";
 import type { NewsComment } from "../types";
 
-export interface CommentWithReplies extends NewsComment {
-  replies?: NewsComment[];
-}
-
 interface CommentItemProps {
-  comment: CommentWithReplies;
+  comment: NewsComment;
+  newsId: string;
   isAdmin: boolean;
   canReply: boolean;
   isReply?: boolean;
   onReplyClick?: () => void;
 }
+
+const REPLIES_PAGE_SIZE = 10;
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", {
@@ -26,6 +32,7 @@ const formatDate = (iso: string) =>
 
 const CommentItem = ({
   comment,
+  newsId,
   isAdmin,
   canReply,
   isReply = false,
@@ -34,11 +41,42 @@ const CommentItem = ({
   // TODO: thay bằng state đến từ server (isHidden) khi BE có endpoint ẩn comment.
   const [locallyHidden, setLocallyHidden] = useState(false);
 
+  // ─── Replies: chỉ comment gốc mới có thể mở rộng, và chỉ fetch khi mở ───────
+  // BE trả replies qua chính GET /news/{newsId}/comments?ParentCommentId=...,
+  // có phân trang riêng, KHÔNG nhúng sẵn trong comment gốc.
+  const [showReplies, setShowReplies] = useState(false);
+  const [repliesPage, setRepliesPage] = useState(1);
+
+  const {
+    data: repliesData,
+    isLoading: isLoadingReplies,
+    isError: isRepliesError,
+  } = useNewsComments(
+    newsId,
+    {
+      parentCommentId: comment.id,
+      page: repliesPage,
+      pageSize: REPLIES_PAGE_SIZE,
+    },
+    // Chỉ gọi API khi người dùng thực sự mở phần trả lời ra.
+    { enabled: !isReply && showReplies },
+  );
+
+  const repliesPagination = (repliesData as any)?.value;
+  const replies: NewsComment[] = repliesPagination?.items ?? [];
+  const repliesTotalPages: number = repliesPagination
+    ? Math.ceil(repliesPagination.totalCount / repliesPagination.pageSize)
+    : 0;
+
+  const handleToggleReplies = () => {
+    setShowReplies((prev) => !prev);
+  };
+
   const handleDelete = () => {
     if (!window.confirm("Xóa bình luận này? Hành động không thể hoàn tác.")) {
       return;
     }
-    // ⚠️ Chưa có endpoint xóa comment trong tài liệu API (12.1/12.2).
+    // ⚠️ Chưa có endpoint xóa comment trong tài liệu API.
     // Gọi publicApi.deleteComment(newsId, comment.id) khi BE bổ sung.
     console.warn("Chưa có endpoint xóa comment — cần bổ sung từ BE.");
   };
@@ -76,14 +114,34 @@ const CommentItem = ({
             {comment.content}
           </p>
 
-          {!isReply && canReply && onReplyClick && (
-            <button
-              onClick={onReplyClick}
-              className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1"
-            >
-              <CornerDownRight className="h-3 w-3" /> Trả lời
-            </button>
-          )}
+          <div className="flex items-center gap-4 mt-1">
+            {!isReply && canReply && onReplyClick && (
+              <button
+                onClick={onReplyClick}
+                className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+              >
+                <CornerDownRight className="h-3 w-3" /> Trả lời
+              </button>
+            )}
+
+            {/* Reply nested tối đa 1 cấp: chỉ comment gốc mới có nút xem trả lời */}
+            {!isReply && (
+              <button
+                onClick={handleToggleReplies}
+                className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+              >
+                {showReplies ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" /> Ẩn trả lời
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" /> Xem trả lời
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {isAdmin && (
@@ -106,18 +164,59 @@ const CommentItem = ({
         )}
       </div>
 
-      {/* Reply nested 1 cấp: chỉ render replies ở comment gốc, không đệ quy sâu hơn */}
-      {!isReply && comment.replies && comment.replies.length > 0 && (
+      {/* ─── Danh sách reply (chỉ hiện khi mở, chỉ ở comment gốc) ─── */}
+      {!isReply && showReplies && (
         <div className="mt-4 space-y-4">
-          {comment.replies.map((reply) => (
+          {isLoadingReplies && (
+            <p className="text-xs text-gray-400 ml-10">Đang tải trả lời...</p>
+          )}
+
+          {isRepliesError && (
+            <p className="text-xs text-red-500 ml-10">
+              Không thể tải trả lời. Vui lòng thử lại sau.
+            </p>
+          )}
+
+          {!isLoadingReplies && !isRepliesError && replies.length === 0 && (
+            <p className="text-xs text-gray-400 ml-10">Chưa có trả lời nào.</p>
+          )}
+
+          {replies.map((reply) => (
             <CommentItem
               key={reply.id}
               comment={reply}
+              newsId={newsId}
               isAdmin={isAdmin}
               canReply={canReply}
               isReply
             />
           ))}
+
+          {repliesTotalPages > 1 && (
+            <div className="flex items-center gap-2 ml-10">
+              <button
+                onClick={() => setRepliesPage((p) => Math.max(p - 1, 1))}
+                disabled={!repliesPagination?.hasPreviousPage}
+                className="text-xs text-blue-600 hover:underline disabled:text-gray-300 disabled:no-underline"
+              >
+                Trang trước
+              </button>
+              <span className="text-xs text-gray-400">
+                {repliesPagination?.pageIndex}/{repliesTotalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setRepliesPage((p) =>
+                    repliesPagination?.hasNextPage ? p + 1 : p,
+                  )
+                }
+                disabled={!repliesPagination?.hasNextPage}
+                className="text-xs text-blue-600 hover:underline disabled:text-gray-300 disabled:no-underline"
+              >
+                Trang sau
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,10 +1,16 @@
 // src/features/publicNews/hooks/usePublicNewsList.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { publicApi } from "../services";
 import type {
   PublicNewsQueryParams,
   PublicRecruitmentQueryParams,
+  NewsCommentsQueryParams,
   CreateCommentPayload,
 } from "../types";
 
@@ -18,7 +24,11 @@ export const publicKeys = {
     detail: (slug: string) => [...publicKeys.news.all, "detail", slug] as const,
   },
   comments: {
+    // Prefix chung cho 1 bài viết -> dùng để invalidate cả root list lẫn
+    // mọi list replies cùng lúc (TanStack Query match theo prefix mặc định).
     all: (newsId: string) => ["news-comments", newsId] as const,
+    list: (newsId: string, params?: NewsCommentsQueryParams) =>
+      [...publicKeys.comments.all(newsId), params ?? {}] as const,
   },
   recruitments: {
     all: ["public-recruitments"] as const,
@@ -30,7 +40,7 @@ export const publicKeys = {
   },
 };
 
-// ─── GET /api/news/public ──────────────────────────────────────────────────────
+// ─── GET /api/v1/news/public ────────────────────────────────────────────────────
 export const usePublicNewsList = (params?: PublicNewsQueryParams) => {
   return useQuery({
     queryKey: publicKeys.news.list(params ?? {}),
@@ -38,7 +48,7 @@ export const usePublicNewsList = (params?: PublicNewsQueryParams) => {
   });
 };
 
-// ─── GET /api/news/:slug + tự động gọi POST /api/news/:id/view ────────────────
+// ─── GET /api/v1/news/:slug + tự động gọi POST /api/v1/news/:id/view ──────────
 export const usePublicNewsDetail = (slug: string) => {
   const query = useQuery({
     queryKey: publicKeys.news.detail(slug),
@@ -65,16 +75,27 @@ export const usePublicNewsDetail = (slug: string) => {
   return query;
 };
 
-// ─── GET /api/news/:newsId/comments ────────────────────────────────────────────
-export const useNewsComments = (newsId: string) => {
+// ─── GET /api/v1/news/:newsId/comments ──────────────────────────────────────────
+// Dùng chung cho cả 2 trường hợp:
+//  - Lấy comment gốc:  useNewsComments(newsId, { page, pageSize })
+//  - Lấy reply của 1 comment gốc: useNewsComments(newsId, { parentCommentId, page, pageSize })
+export const useNewsComments = (
+  newsId: string,
+  params?: NewsCommentsQueryParams,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
-    queryKey: publicKeys.comments.all(newsId),
-    queryFn: () => publicApi.getComments(newsId),
-    enabled: !!newsId,
+    queryKey: publicKeys.comments.list(newsId, params),
+    queryFn: () => publicApi.getComments(newsId, params),
+    // Mặc định chỉ cần có newsId là fetch (dùng cho comment gốc). Khi dùng để
+    // lazy-load replies, truyền enabled: false cho tới khi người dùng mở ra.
+    enabled: !!newsId && (options?.enabled ?? true),
+    // Giữ data trang cũ khi đổi trang/param để tránh nháy loading toàn màn hình.
+    placeholderData: keepPreviousData,
   });
 };
 
-// ─── POST /api/news/:newsId/comments ───────────────────────────────────────────
+// ─── POST /api/v1/news/:newsId/comments ─────────────────────────────────────────
 export const useCreateComment = (newsId: string) => {
   const queryClient = useQueryClient();
 
@@ -82,6 +103,8 @@ export const useCreateComment = (newsId: string) => {
     mutationFn: (payload: CreateCommentPayload) =>
       publicApi.createComment(newsId, payload),
     onSuccess: () => {
+      // Comment mới có thể là root hoặc reply của 1 comment cụ thể -> invalidate
+      // toàn bộ cache comments của bài viết này (mọi biến thể phân trang/parentId).
       queryClient.invalidateQueries({
         queryKey: publicKeys.comments.all(newsId),
       });

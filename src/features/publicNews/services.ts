@@ -5,15 +5,15 @@ import type {
   PublicNewsItem,
   PublicNewsQueryParams,
   NewsComment,
+  NewsCommentsQueryParams,
   CreateCommentPayload,
 } from "./types";
 import type { ApiResponse, PaginatedResponse } from "@/shared/types/types";
 
-// Lưu ý: apiClient được giả định đã có baseURL = "/api" (khớp với tài liệu
-// "GET /api/news/public", "GET /api/news/{slug}", ...). Nếu baseURL khác,
-// chỉnh lại path cho phù hợp.
+// Lưu ý: apiClient được giả định đã có baseURL = "/api/v1" (khớp với Swagger
+// "GET /api/v1/news/{newsId}/comments", ...). Nếu baseURL khác, chỉnh lại path.
 export const publicApi = {
-  // ─── GET /api/news/public ────────────────────────────────────────────────────
+  // ─── GET /api/v1/news/public ──────────────────────────────────────────────────
   async getNewsList(
     params?: PublicNewsQueryParams,
   ): Promise<ApiResponse<PaginatedResponse<PublicNewsItem>>> {
@@ -22,27 +22,41 @@ export const publicApi = {
     }) as unknown as Promise<ApiResponse<PaginatedResponse<PublicNewsItem>>>;
   },
 
-  // ─── GET /api/news/:slug ──────────────────────────────────────────────────────
+  // ─── GET /api/v1/news/:slug ────────────────────────────────────────────────────
   async getNewsBySlug(slug: string): Promise<ApiResponse<PublicNewsDetail>> {
     return apiClient.get(`/news/${slug}`) as unknown as Promise<
       ApiResponse<PublicNewsDetail>
     >;
   },
 
-  // ─── POST /api/news/:newsId/view ─────────────────────────────────────────────
+  // ─── POST /api/v1/news/:newsId/view ───────────────────────────────────────────
   // FE chỉ cần gọi khi mở trang chi tiết, không cần tự chống duplicate — BE xử lý.
   async increaseNewsView(newsId: string): Promise<void> {
     await apiClient.post(`/news/${newsId}/view`);
   },
 
-  // ─── GET /api/news/:newsId/comments ──────────────────────────────────────────
-  async getComments(newsId: string): Promise<ApiResponse<NewsComment[]>> {
-    return apiClient.get(`/news/${newsId}/comments`) as unknown as Promise<
-      ApiResponse<NewsComment[]>
-    >;
+  // ─── GET /api/v1/news/:newsId/comments ────────────────────────────────────────
+  // Endpoint có phân trang (Page/PageSize) và filter theo ParentCommentId:
+  //  - Không truyền ParentCommentId  -> danh sách comment gốc (root), phân trang.
+  //  - Truyền ParentCommentId=<id>   -> danh sách reply của đúng comment đó, phân trang riêng.
+  // BE KHÔNG nhúng sẵn replies vào comment gốc -> FE phải tự gọi thêm lần nữa
+  // với ParentCommentId khi cần hiển thị reply (xem useNewsCommentReplies).
+  async getComments(
+    newsId: string,
+    params?: NewsCommentsQueryParams,
+  ): Promise<ApiResponse<PaginatedResponse<NewsComment>>> {
+    return apiClient.get(`/news/${newsId}/comments`, {
+      params: {
+        // Giữ đúng tên/casing tham số như Swagger khai báo.
+        ParentCommentId: params?.parentCommentId,
+        Page: params?.page,
+        PageSize: params?.pageSize,
+      },
+    }) as unknown as Promise<ApiResponse<PaginatedResponse<NewsComment>>>;
   },
 
-  // ─── POST /api/news/:newsId/comments ─────────────────────────────────────────
+  // ─── POST /api/v1/news/:newsId/comments ───────────────────────────────────────
+  // Body: { content: string; parentCommentId?: string | null }
   async createComment(
     newsId: string,
     payload: CreateCommentPayload,
@@ -54,8 +68,7 @@ export const publicApi = {
   },
 
   // ⚠️ CHƯA CÓ TRONG TÀI LIỆU API: xóa/ẩn comment (dành cho Admin).
-  // Tài liệu 12.1/12.2 hiện không liệt kê endpoint này. Cần xác nhận với BE
-  // trước khi bật thật 2 hàm dưới đây trong CommentItem.tsx.
+  // Cần xác nhận với BE trước khi bật thật 2 hàm dưới đây trong CommentItem.tsx.
   // async deleteComment(newsId: string, commentId: string): Promise<void> {
   //   await apiClient.delete(`/news/${newsId}/comments/${commentId}`);
   // },

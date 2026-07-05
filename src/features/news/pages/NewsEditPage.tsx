@@ -16,6 +16,7 @@ export const NewsEditPage = () => {
       coverImg: formData.coverImg || undefined,
       contentHtml: formData.contentHtml,
       contentJson: formData.contentJson,
+      type: formData.type,
       status: formData.status,
     });
   };
@@ -52,6 +53,7 @@ export const NewsEditPage = () => {
           coverImg: news.coverImg ?? "",
           contentHtml: news.contentHtml,
           contentJson: news.contentJson ?? undefined,
+          type: news.type,
           status: news.status,
         }}
         onSubmit={handleUpdate}

@@ -5,47 +5,28 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useCurrentUserRole } from "@/features/auth/hooks/useCurrentUserRole";
 import { isRateLimitError } from "@/shared/utils/apiError";
 import { useNewsComments, useCreateComment } from "../hooks/usePublicNewsList";
-import CommentItem, { type CommentWithReplies } from "./CommentItem";
-import type { NewsComment } from "../types";
+import CommentItem from "./CommentItem";
 
 interface CommentSectionProps {
   newsId: string;
 }
 
-/**
- * Dựng cây comment 1 cấp từ danh sách phẳng (dựa theo parentCommentId).
- * Nếu 1 reply lại trỏ parentCommentId vào 1 reply khác (tức muốn tạo cấp 2),
- * ta đẩy nó lên làm comment gốc để đảm bảo UI chỉ nested tối đa 1 cấp.
- */
-function buildCommentTree(comments: NewsComment[]): CommentWithReplies[] {
-  const byId = new Map<string, CommentWithReplies>();
-  comments.forEach((c) => byId.set(c.id, { ...c, replies: [] }));
-
-  const roots: CommentWithReplies[] = [];
-
-  byId.forEach((comment) => {
-    if (!comment.parentCommentId) {
-      roots.push(comment);
-      return;
-    }
-    const parent = byId.get(comment.parentCommentId);
-    if (parent && !parent.parentCommentId) {
-      parent.replies!.push(comment);
-    } else {
-      // Cha không tồn tại hoặc cha cũng là 1 reply -> không nested tiếp, coi như gốc
-      roots.push(comment);
-    }
-  });
-
-  return roots;
-}
+const PAGE_SIZE = 10;
 
 const CommentSection = ({ newsId }: CommentSectionProps) => {
   const role = useCurrentUserRole();
   const isAdmin = role === "admin";
   const canComment = role !== "anonymous"; // Applicant/Employee/Admin đều thấy form
 
-  const { data, isLoading, isError } = useNewsComments(newsId);
+  const [page, setPage] = useState(1);
+
+  // Chỉ lấy comment GỐC (không truyền parentCommentId). Replies được từng
+  // CommentItem tự fetch riêng khi người dùng bấm "Xem trả lời", vì BE trả
+  // replies qua chính endpoint này với query ParentCommentId, phân trang riêng.
+  const { data, isLoading, isError } = useNewsComments(newsId, {
+    page,
+    pageSize: PAGE_SIZE,
+  });
   const createComment = useCreateComment(newsId);
 
   const [content, setContent] = useState("");
@@ -55,8 +36,12 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const rawComments: NewsComment[] = (data as any)?.value ?? [];
-  const tree = buildCommentTree(rawComments);
+  const pagination = (data as any)?.value;
+  const rootComments = pagination?.items ?? [];
+  const totalCount: number = pagination?.totalCount ?? 0;
+  const totalPages: number = pagination
+    ? Math.ceil(pagination.totalCount / pagination.pageSize)
+    : 0;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -85,7 +70,7 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
   return (
     <section className="mt-10">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Bình luận{rawComments.length > 0 ? ` (${rawComments.length})` : ""}
+        Bình luận{totalCount > 0 ? ` (${totalCount})` : ""}
       </h2>
 
       {canComment ? (
@@ -143,17 +128,18 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
         </p>
       )}
 
-      {!isLoading && !isError && tree.length === 0 && (
+      {!isLoading && !isError && rootComments.length === 0 && (
         <p className="text-sm text-gray-500">
           Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
         </p>
       )}
 
       <div className="space-y-6">
-        {tree.map((comment) => (
+        {rootComments.map((comment: any) => (
           <CommentItem
             key={comment.id}
             comment={comment}
+            newsId={newsId}
             isAdmin={isAdmin}
             canReply={canComment}
             onReplyClick={() =>
@@ -162,6 +148,41 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
           />
         ))}
       </div>
+
+      {/* ─── Pagination cho comment gốc ─── */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-8 space-x-2">
+          <button
+            onClick={() => setPage((old) => Math.max(old - 1, 1))}
+            disabled={!pagination?.hasPreviousPage}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+              !pagination?.hasPreviousPage
+                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Trước
+          </button>
+
+          <span className="text-sm font-medium px-4">
+            Trang {pagination?.pageIndex} / {totalPages}
+          </span>
+
+          <button
+            onClick={() =>
+              setPage((old) => (pagination?.hasNextPage ? old + 1 : old))
+            }
+            disabled={!pagination?.hasNextPage}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+              !pagination?.hasNextPage
+                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            Sau
+          </button>
+        </div>
+      )}
     </section>
   );
 };

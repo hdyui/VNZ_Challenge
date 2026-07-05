@@ -12,6 +12,7 @@ export const NewsCreatePage = () => {
       coverImg: data.coverImg,
       contentHtml: data.contentHtml,
       contentJson: data.contentJson,
+      type: data.type,
       status: data.status,
     });
   };

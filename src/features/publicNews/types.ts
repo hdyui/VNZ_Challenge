@@ -74,3 +74,9 @@ export interface PublicRecruitmentQueryParams {
   search?: string;
   level?: RecruitmentLevel | "" | "all";
 }
+export interface NewsCommentsQueryParams {
+  /** Truyền id của 1 comment gốc để lấy replies của nó; bỏ trống để lấy comment gốc. */
+  parentCommentId?: string;
+  page?: number;
+  pageSize?: number;
+}

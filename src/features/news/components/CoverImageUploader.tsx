@@ -75,7 +75,7 @@ const ASPECT_OPTIONS: AspectOption[] = [
 const MAX_FILE_SIZE_MB = 5;
 
 interface CoverImageUploaderProps {
-  value?: string; // URL ảnh bìa hiện tại
+  value?: string; // URL ảnh bìa hiện tại (đã upload xong qua /auth/uploads)
   onChange: (url: string) => void;
   disabled?: boolean;
 }
@@ -203,9 +203,9 @@ export const CoverImageUploader = ({
         srcFileName,
       );
 
+      // Upload ngay qua POST /auth/uploads, lấy về URL, dùng URL này làm
+      // giá trị coverImg (gửi kèm dạng text field khi tạo/sửa bài viết).
       const res = await newsApi.uploadImage(croppedFile);
-      // ⚠️ Giả định response trả về { url } — kiểm tra lại field thực tế từ
-      // BE (có thể là `urlImage` hoặc `path`) và chỉnh sửa nếu cần.
       const uploadedUrl =
         (res.data as any)?.url ?? (res.data as any)?.urlImage ?? "";
 
