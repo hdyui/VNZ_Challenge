@@ -57,9 +57,12 @@ export const AccountListPage = () => {
     responseData?.value ||
     (data as unknown as PaginatedResponse<AccountListItem>);
 
+  // const items = paginatedData?.items || [];
   const items = paginatedData?.items || [];
   const totalCount = paginatedData?.totalCount || 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / LIMIT));
+
+  console.log(items);
 
   useEffect(() => {
     const currentUrlSearch = searchParams.get("search") || "";
@@ -97,9 +100,9 @@ export const AccountListPage = () => {
       cell: (item) => (
         <div>
           <p className="font-medium text-gray-800">
-            {item.user.lastName} {item.user.firstName}
+            {item.user?.lastName ?? ""} {item.user?.firstName ?? ""}
           </p>
-          <p className="text-xs text-gray-500">{item.user.position}</p>
+          <p className="text-xs text-gray-500">{item.user?.position ?? ""}</p>
         </div>
       ),
     },
@@ -118,7 +121,9 @@ export const AccountListPage = () => {
       header: "Trạng thái",
       cell: (item) => (
         <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${item.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+          className={`px-2 py-1 text-xs font-semibold rounded-full 
+             ${item.status === "Active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}
+            `}
         >
           {item.status}
         </span>
