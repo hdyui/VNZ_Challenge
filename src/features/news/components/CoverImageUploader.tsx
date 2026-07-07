@@ -313,7 +313,14 @@ export const CoverImageUploader = ({
         </button>
       )}
 
-      {/* ... (input file ẩn) ... */}
+      {/* Input file ẩn - được trigger qua inputRef.current?.click() */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handlePickFile}
+      />
 
       {/* Modal cắt ảnh áp dụng Shadow sâu và Backdrop Blur */}
       {modalOpen && srcDataUrl && (
@@ -333,7 +340,25 @@ export const CoverImageUploader = ({
             </div>
 
             <div className="space-y-4 overflow-y-auto px-5 py-4">
-              {/* ... (Select tỉ lệ) ... */}
+              {/* Select tỉ lệ ngay trong modal, cho phép đổi tỉ lệ khi đang crop */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 shrink-0">Tỉ lệ:</span>
+                <Select
+                  value={aspectKey}
+                  onValueChange={handleChangeAspectInModal}
+                >
+                  <SelectTrigger className="h-9 w-60 rounded-lg border-slate-300 bg-white text-sm focus:border-[#0F6B66] focus:ring-[#0F6B66]/20 transition-all">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ASPECT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.key} value={opt.key}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* Nền cảnh báo đỏ nhạt */}
               {warning && (
@@ -343,7 +368,13 @@ export const CoverImageUploader = ({
               )}
 
               <div className="flex justify-center rounded-xl bg-slate-50 border border-slate-100 p-2">
-                <ReactCrop /*... props ...*/>
+                <ReactCrop
+                  crop={crop}
+                  onChange={(_, percentCrop) => setCrop(percentCrop)}
+                  onComplete={(c) => setCompletedCrop(c)}
+                  aspect={currentAspect.ratio}
+                  keepSelection
+                >
                   <img
                     src={srcDataUrl}
                     onLoad={handleImageLoad}
