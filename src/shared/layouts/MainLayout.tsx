@@ -22,6 +22,7 @@ import { useAuthStore } from "@/features/auth/store";
 
 const NAV_LINKS = [
   { to: "/", label: "Trang chủ" },
+  { to: "/about", label: "Giới thiệu" },
   { to: "/news", label: "Tin tức" },
   { to: "/recruitments", label: "Tuyển dụng" },
 ];

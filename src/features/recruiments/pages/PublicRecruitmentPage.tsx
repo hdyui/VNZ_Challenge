@@ -23,6 +23,7 @@ import {
   TrendingUp,
   CalendarDays,
   ArrowRight,
+  Sparkles,
   X,
   Eye,
 } from "lucide-react";
@@ -42,14 +43,15 @@ const LEVEL_OPTIONS: { label: string; value: RecruitmentLevel | "all" }[] = [
 const LEVEL_COLOR: Record<RecruitmentLevel, string> = {
   all: "bg-slate-100 text-slate-700 border-slate-200",
   Intern: "bg-slate-100 text-slate-700 border-slate-200",
-  Fresher: "bg-green-50 text-green-700 border-green-200",
-  Junior: "bg-blue-50 text-blue-700 border-blue-200",
+  Fresher: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Junior: "bg-sky-50 text-sky-700 border-sky-200",
   Middle: "bg-violet-50 text-violet-700 border-violet-200",
-  Senior: "bg-amber-50 text-amber-700 border-amber-200",
+  Senior:
+    "bg-gradient-to-r from-amber-100 to-amber-50 text-amber-700 border-amber-200",
 };
 
 const RecruitmentCardSkeleton = () => (
-  <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
+  <div className="rounded-3xl border border-slate-100/80 bg-white/70 backdrop-blur-sm p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4">
     <div className="flex items-start justify-between gap-4">
       <Skeleton className="h-6 w-2/3" />
       <Skeleton className="h-5 w-16 rounded-full" />
@@ -81,7 +83,7 @@ const RecruitmentCard = ({
 }: RecruitmentCardProps) => (
   <article
     onClick={onClick}
-    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg space-y-4"
+    className="group relative cursor-pointer overflow-hidden rounded-3xl border border-slate-100/80 bg-white/80 backdrop-blur-sm p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#0F6B66]/25 hover:shadow-[0_20px_45px_-15px_rgba(15,107,102,0.35)] space-y-4"
   >
     <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-300 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
     <div className="flex items-start justify-between gap-3">
@@ -96,11 +98,11 @@ const RecruitmentCard = ({
     </div>
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500">
       <span className="flex items-center gap-1.5">
-        <Building2 className="h-3.5 w-3.5 text-gray-400" />
+        <Building2 className="h-3.5 w-3.5 text-slate-400" />
         {departmentName}
       </span>
       <span className="flex items-center gap-1.5">
-        <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
+        <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
         {format(new Date(createdAt), "dd/MM/yyyy")}
       </span>
       <span className="flex items-center gap-1.5 text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md font-medium ml-auto">
@@ -252,20 +254,20 @@ const PublicRecruitmentPage = () => {
             <BriefcaseBusiness className="h-3.5 w-3.5" /> Chúng tôi đang tuyển
             dụng!
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-[#0F6B66] to-[#0B4F4B] sm:text-5xl">
             Gia nhập đội ngũ của chúng tôi
           </h1>
-          <p className="mx-auto max-w-xl text-base text-gray-500 leading-relaxed">
+          <p className="mx-auto max-w-xl text-base text-slate-500 leading-relaxed">
             Khám phá các vị trí đang mở ở tất cả phòng ban. Tìm vai trò phù hợp
             với kỹ năng của bạn và cùng chúng tôi phát triển.
           </p>
 
           <div className="mx-auto mt-6 max-w-lg">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Tìm kiếm theo tên vị trí..."
-                className="h-11 pl-9 pr-9 border-gray-200 rounded-xl focus-visible:ring-indigo-500"
+                className="h-12 pl-9 pr-9 border-slate-200 rounded-xl bg-white/90 shadow-sm focus-visible:ring-[#0F6B66]"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -290,10 +292,10 @@ const PublicRecruitmentPage = () => {
               <Skeleton className="h-4 w-28" />
             ) : (
               <>
-                <span className="font-semibold text-gray-900">{total}</span> vị
+                <span className="font-semibold text-slate-900">{total}</span> vị
                 trí đang mở
                 {hasActiveFilters && (
-                  <span className="text-gray-400"> phù hợp với bộ lọc</span>
+                  <span className="text-slate-400"> phù hợp với bộ lọc</span>
                 )}
               </>
             )}
@@ -301,9 +303,9 @@ const PublicRecruitmentPage = () => {
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-gray-400 shrink-0" />
+              <TrendingUp className="h-4 w-4 text-slate-400 shrink-0" />
               <Select value={level} onValueChange={handleLevelChange}>
-                <SelectTrigger className="w-40 border-gray-200 rounded-xl">
+                <SelectTrigger className="w-40 border-slate-200 rounded-xl bg-white">
                   <SelectValue placeholder="Tất cả cấp bậc" />
                 </SelectTrigger>
                 <SelectContent>
@@ -321,7 +323,7 @@ const PublicRecruitmentPage = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleClearFilters}
-                className="gap-1.5 text-gray-500 hover:text-gray-800"
+                className="gap-1.5 text-slate-500 hover:text-slate-800"
               >
                 <X className="h-3.5 w-3.5" /> Xóa lọc
               </Button>
@@ -336,21 +338,21 @@ const PublicRecruitmentPage = () => {
             ))}
           </div>
         ) : recruitments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-24 space-y-3 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-50">
-              <BriefcaseBusiness className="h-6 w-6 text-gray-300" />
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white/70 backdrop-blur-sm py-24 space-y-3 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0F6B66]/10">
+              <BriefcaseBusiness className="h-6 w-6 text-[#0F6B66]/40" />
             </div>
-            <p className="text-base font-medium text-gray-700">
+            <p className="text-base font-medium text-slate-700">
               Không tìm thấy vị trí nào
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-slate-400">
               Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.
             </p>
             {hasActiveFilters && (
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-2 border-gray-200"
+                className="mt-2 border-slate-200"
                 onClick={handleClearFilters}
               >
                 Xóa bộ lọc
@@ -379,7 +381,7 @@ const PublicRecruitmentPage = () => {
               variant="outline"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className="border-gray-200 rounded-xl"
+              className="border-slate-200 rounded-xl bg-white/80 backdrop-blur-sm hover:border-[#0F6B66]/30 hover:text-[#0F6B66]"
             >
               Trước
             </Button>
@@ -390,7 +392,7 @@ const PublicRecruitmentPage = () => {
               variant="outline"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages}
-              className="border-gray-200 rounded-xl"
+              className="border-slate-200 rounded-xl bg-white/80 backdrop-blur-sm hover:border-[#0F6B66]/30 hover:text-[#0F6B66]"
             >
               Sau
             </Button>

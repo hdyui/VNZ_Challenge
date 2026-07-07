@@ -15,9 +15,36 @@ const apiClient = axios.create({
 //Request Interceptor: Attach Token: tự động thêm token vào header Authorization nếu có
 apiClient.interceptors.request.use(
   (config) => {
-    const accessToken = useAuthStore.getState().accessToken; // lấy token từ auth store
+    const state = useAuthStore.getState();
+    const accessToken = state.accessToken;
+    const isHydrated = (state as any)._hydrated ?? false;
+
+    // console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
+    //   isHydrated,
+    //   hasToken: !!accessToken,
+    //   tokenPreview: accessToken?.substring(0, 20),
+    // });
+
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+      // console.log(`  ✅ Token attached`);
+    } else if (!isHydrated) {
+      console.warn(`  ⚠️ Store not hydrated yet, checking localStorage...`);
+      // Fallback: try to get token directly from localStorage
+      try {
+        const stored = localStorage.getItem("VNZ_Challenge");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.state?.accessToken) {
+            config.headers.Authorization = `Bearer ${parsed.state.accessToken}`;
+            // console.log(`  ✅ Token found in localStorage`);
+          }
+        }
+      } catch (e) {
+        console.warn(`  ❌ Failed to parse localStorage`);
+      }
+    } else {
+      console.warn(`  ❌ NO TOKEN FOUND`);
     }
     return config;
   },
@@ -42,8 +69,9 @@ const processQueue = (error: unknown, token: string | null) => {
 apiClient.interceptors.response.use(
   (response) => {
     const body = response;
-    if (body?.value !== undefined) return body.value;
+    //if (body?.value !== undefined) return body.value;
     if (body?.data !== undefined) return body.data;
+    //console.log("body response + `${body}`");
     return body;
   },
   async (error) => {
@@ -53,9 +81,17 @@ apiClient.interceptors.response.use(
     const is401 = error.response?.status === 401;
     const notRetriedYet = !originalRequest._retry;
 
+    console.error(
+      `[API Error] ${originalRequest.method?.toUpperCase()} ${originalRequest.url} - Status: ${error.response?.status}`,
+      error.response?.data,
+    );
+
     // const status = error.response?.status; // lấy status code để xử lý theo từng trường hợp
     // VD: nếu lỗi 401 Unauthorized, có thể do token hết hạn
     if (is401 && notAuthReqs && notRetriedYet) {
+      // console.log(
+      //   `[Refresh Token] Attempting to refresh token for ${originalRequest.url}`,
+      // );
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -74,7 +110,7 @@ apiClient.interceptors.response.use(
         // 1. Gọi API xin token mới
         // ⚠️ Dùng axios thường để tránh dính interceptor của apiClient
         const res = await axios.post(
-          `${env.API_URL}auth/refresh`,
+          `${env.API_URL}/auth/refresh-token`,
           {},
           {
             withCredentials: true, // gửi cookie nếu cần
@@ -82,14 +118,21 @@ apiClient.interceptors.response.use(
         );
 
         const newToken: string =
-          res.data?.data?.accessToken ?? res.data?.accessToken;
+          res.data?.data?.accessToken ??
+          res.data?.accessToken ??
+          res.data?.value?.accessToken;
 
-        // const { accessToken } = response.data; // giả sử BE trả về { data: { accessToken }
-        // Cập nhật token mới vào auth store, chỉ cần cập nhật accessToken, refreshToken thường k đổi
+        if (!newToken) {
+          throw new Error(
+            "Không nhận được token mới từ server. Response: " +
+              JSON.stringify(res.data),
+          );
+        }
+        // Cập nhật token mới vào auth store
         useAuthStore.getState().setAuth({
           accessToken: newToken,
           role: useAuthStore.getState().role,
-        }); // cập nhật token mới vào store
+        });
 
         processQueue(null, newToken);
 
@@ -99,10 +142,14 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Nếu refresh cũng fail → Logout luôn
+        console.error(
+          "Refresh token failed:",
+          (refreshError as any).response?.data ?? (refreshError as any).message,
+        );
         processQueue(refreshError, null);
         useAuthStore.getState().clearAuth();
         toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
-        window.location.href = "/login"; // Redirect cứng về login
+        //window.location.href = "/login"; // Redirect cứng về login
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

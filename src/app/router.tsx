@@ -44,12 +44,29 @@ import ApplicantProfilePage from "@/features/applicant/pages/ApplicantProfilePag
 import MyLeaveListPage from "@/features/account/pages/MyLeavePage";
 import MyLeaveDetailPage from "@/features/account/pages/MyLeaveDetailPage";
 
+// ─── Shifts & WorkSchedules ────────────────────────────────────────────────
+import {
+  ShiftListPage,
+  ShiftCreatePage,
+  ShiftEditPage,
+} from "@/features/shifts";
+import {
+  ScheduleListPage,
+  ScheduleCreatePage,
+  ScheduleEditPage,
+  ScheduleDuplicateCreatePage,
+  MySchedulePage,
+} from "@/features/workSchedules";
+import About from "@/shared/layouts/About";
+import LeaveApplicationListPage from "@/features/leave-application/pages/LeaveApplicationListPage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: "about", element: <About /> },
       { path: "news", element: <PublicNewsPage /> },
       { path: "news/:slug", element: <PublicNewsDetailPage /> },
       { path: "recruitments", element: <PublicRecruitmentPage /> },
@@ -107,6 +124,24 @@ export const router = createBrowserRouter([
             path: "recruitments/:id",
             element: <RecruitmentDetailsPPage />,
           },
+
+          // Shifts
+          { path: "shifts", element: <ShiftListPage /> },
+          { path: "shifts/create", element: <ShiftCreatePage /> },
+          { path: "shifts/update/:id", element: <ShiftEditPage /> },
+
+          // Work Schedules
+          { path: "schedules", element: <ScheduleListPage /> },
+          { path: "schedules/create", element: <ScheduleCreatePage /> },
+          { path: "schedules/update/:id", element: <ScheduleEditPage /> },
+          {
+            path: "schedules/duplicate-create",
+            element: <ScheduleDuplicateCreatePage />,
+          },
+          {
+            path: "leave-applications",
+            element: <LeaveApplicationListPage />,
+          },
         ],
       },
     ],
@@ -135,12 +170,11 @@ export const router = createBrowserRouter([
     element: <RequireAuth allowedRoles={["Employee"]} />,
     children: [
       {
+        element: <EmployeeProfileLayout />,
         children: [
-          {
-            element: <EmployeeProfileLayout />,
-            children: [{ index: true, element: <ProfilePage /> }],
-          },
+          { index: true, element: <ProfilePage /> },
           { path: "profile", element: <ProfilePage /> },
+          { path: "schedule", element: <MySchedulePage /> },
           { path: "leaves", element: <MyLeaveListPage /> },
           { path: "leaves/:id", element: <MyLeaveDetailPage /> },
         ],

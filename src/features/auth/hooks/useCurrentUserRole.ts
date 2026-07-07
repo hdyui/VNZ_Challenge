@@ -9,7 +9,9 @@
 // logic phân quyền đã thống nhất (Anonymous ẩn form, Applicant/Employee/Admin
 // thấy form, chỉ Admin thấy nút xóa/ẩn comment).
 
-export type AppRole = "anonymous" | "applicant" | "employee" | "admin";
+import { useAuthStore } from "../store";
+
+export type AppRole = "Anonymous" | "Applicant" | "Employee" | "Admin";
 
 // import { useAuthStore } from "@/features/auth/stores"; // TODO: bật lại khi có store thật
 
@@ -19,7 +21,7 @@ export const useCurrentUserRole = (): AppRole => {
   // if (!user) return "anonymous";
   // return (user.role?.toLowerCase() as AppRole) ?? "anonymous";
 
-  const user = null as null | { role: AppRole };
-  if (!user) return "anonymous";
-  return user.role;
+  const user = useAuthStore((state) => state.role);
+  if (!user) return "Anonymous";
+  return user;
 };

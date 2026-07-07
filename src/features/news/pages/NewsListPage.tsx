@@ -20,12 +20,13 @@ import type { NewsListItem, NewsStatus } from "../type";
 import {
   Edit,
   Eye,
-  Loader2,
   Plus,
   Search,
   SlidersHorizontal,
   Trash2,
+  X,
 } from "lucide-react";
+import { NewsTpyeBadge } from "../components/NewTypeBadge";
 
 const LIMIT = 10;
 
@@ -64,15 +65,9 @@ export const NewsListPage = () => {
 
   const {
     mutate: deleteNews,
-    isPending: isDeleting,
+    isPending: isDeleting, // Logic preserved, even if unused in current UI
     variables: deletingId,
   } = useDeleteNews();
-
-  const resetToFirstPage = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("page", "1");
-    setSearchParams(nextParams);
-  };
 
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -107,18 +102,18 @@ export const NewsListPage = () => {
           <img
             src={item.coverImg}
             alt={item.title}
-            className="h-10 w-16 rounded object-cover border border-gray-100"
+            className="h-10 w-16 rounded-md object-cover border border-gray-200 shadow-sm"
           />
         ) : (
-          <div className="h-10 w-16 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-            No img
+          <div className="h-10 w-16 rounded-md bg-gray-50 flex items-center justify-center text-gray-400 text-xs border border-gray-100">
+            Trống
           </div>
         ),
     },
     {
       header: "Tiêu đề",
       cell: (item) => (
-        <span className="font-medium text-gray-800 line-clamp-2">
+        <span className="font-medium text-gray-900 line-clamp-2">
           {item.title}
         </span>
       ),
@@ -128,6 +123,10 @@ export const NewsListPage = () => {
       cell: (item) => (
         <span className="text-sm text-gray-600">{item.author.fullName}</span>
       ),
+    },
+    {
+      header: "Loại tin",
+      cell: (item) => <NewsTpyeBadge status={item.type} />,
     },
     {
       header: "Trạng thái",
@@ -144,11 +143,14 @@ export const NewsListPage = () => {
     {
       header: "Thao tác",
       cell: (item) => (
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+            className="h-8 w-8 rounded-md text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
             onClick={() => navigate(`/admin/news/update/${item.id}`)}
           >
             <Edit className="h-4 w-4" />
@@ -156,7 +158,7 @@ export const NewsListPage = () => {
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+            className="h-8 w-8 rounded-md text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
             onClick={() => navigate(`/admin/news/${item.id}`)}
           >
             <Eye className="h-4 w-4" />
@@ -164,7 +166,7 @@ export const NewsListPage = () => {
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+            className="h-8 w-8 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
             onClick={() => {
               handleDelete(item.id);
             }}
@@ -180,11 +182,11 @@ export const NewsListPage = () => {
   const pagination = data?.data?.pagination;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
             Quản lý Tin tức
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -192,7 +194,7 @@ export const NewsListPage = () => {
           </p>
         </div>
         <Link to="/admin/news/create">
-          <Button className="bg-blue-600 hover:bg-blue-900 w-40 h-9">
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm h-10 px-4 rounded-lg flex items-center gap-2 transition-all">
             <Plus className="h-4 w-4" />
             Viết bài mới
           </Button>
@@ -200,41 +202,43 @@ export const NewsListPage = () => {
       </div>
 
       {/* Bộ lọc */}
-      <div className="grid gap-3 rounded-xl p-1 sm:grid-cols-[minmax(0,1fr)_260px] sm:items-center">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1 sm:max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm kiếm theo tiêu đề..."
-              className="h-11 rounded-xl border-gray-200 bg-slate-50 pl-11 pr-4 text-sm shadow-sm transition focus:bg-white focus:border-blue-300"
-            />
-          </div>
-          {searchInput ? (
-            <Button
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search */}
+        <div className="relative flex-1 sm:max-w-md flex items-center">
+          <Search className="absolute left-3 text-gray-400 h-4 w-4" />
+          <Input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Tìm kiếm theo tiêu đề..."
+            className="h-10 w-full pl-9 pr-10 border-gray-200 rounded-lg shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all bg-white"
+          />
+          {searchInput && (
+            <button
               type="button"
-              variant="outline"
               onClick={() => setSearchInput("")}
-              className="h-11 min-w-[104px] rounded-xl border-blue-200 bg-blue-50 px-4 text-blue-700 shadow-sm transition hover:bg-blue-100 hover:text-blue-800"
+              className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded-full hover:bg-gray-100"
             >
-              Xóa
-            </Button>
-          ) : null}
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-slate-50 p-1.5 shadow-sm">
-          <div className="flex shrink-0 items-center gap-2 text-sm font-medium text-gray-600">
-            <SlidersHorizontal className="size-4 text-gray-500" />
-            Trạng thái
-          </div>
+        {/* Status Filter */}
+        <div className="sm:w-[200px]">
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-11 w-[140px] rounded-xl border-gray-200 bg-white shadow-sm">
-              <SelectValue placeholder="Tất cả trạng thái" />
+            <SelectTrigger className="h-10 rounded-lg border-gray-200 shadow-sm bg-white focus:ring-2 focus:ring-indigo-500/20">
+              <div className="flex items-center gap-2 text-gray-600">
+                <SlidersHorizontal className="h-4 w-4 text-gray-400" />
+                <SelectValue placeholder="Trạng thái" />
+              </div>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-lg border-gray-200 shadow-lg">
               {STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="rounded-md"
+                >
                   {opt.label}
                 </SelectItem>
               ))}
@@ -244,22 +248,37 @@ export const NewsListPage = () => {
       </div>
 
       {/* Table */}
-      <Card className="shadow-sm border-gray-200">
+      <Card className="border-gray-200 shadow-sm rounded-xl overflow-hidden">
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="py-16 text-center text-gray-400">Đang tải...</div>
+            <div className="py-20 flex flex-col items-center justify-center text-gray-500 space-y-3">
+              <div className="h-6 w-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm">Đang tải danh sách...</span>
+            </div>
           ) : items.length === 0 ? (
-            <div className="py-16 text-center text-gray-400">
-              Chưa có bài viết nào.
+            <div className="py-20 flex flex-col items-center justify-center text-gray-500 space-y-2">
+              <Search className="h-8 w-8 text-gray-300 mb-2" />
+              <span className="text-sm font-medium text-gray-900">
+                Không tìm thấy bài viết nào
+              </span>
+              <span className="text-sm text-gray-500">
+                Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm.
+              </span>
             </div>
           ) : (
-            <DataTable data={items} columns={columns} />
+            <div className="overflow-x-auto">
+              <DataTable data={items} columns={columns} />
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Pagination */}
-      {pagination && <UrlPagination totalPages={pagination.totalPages} />}
+      {pagination && (
+        <div className="pt-2">
+          <UrlPagination totalPages={pagination.totalPages} />
+        </div>
+      )}
     </div>
   );
 };

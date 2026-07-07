@@ -2,12 +2,14 @@
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { Separator } from "@/shared/components/ui/separator";
 import {
   useNewsDetail,
   useDeleteNewsImage,
   useUploadNewsImages,
 } from "../hooks/useNews";
 import { NewsStatusBadge } from "../components/NewsStatusBadge";
+import CommentSection from "@/features/publicNews/components/CommentSection";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import { useRef } from "react";
 
@@ -109,6 +111,11 @@ export const NewsDetailPage = () => {
             className="prose prose-blue max-w-none text-gray-700 prose-headings:font-bold prose-img:rounded-xl"
             dangerouslySetInnerHTML={{ __html: news.contentHtml }}
           />
+
+          <Separator className="my-10 border-gray-100" />
+
+          {/* Bình luận */}
+          <CommentSection newsId={news.id} />
         </CardContent>
       </Card>
     </div>

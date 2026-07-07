@@ -47,24 +47,24 @@ export const useLoginMutation = () => {
   return useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: (data) => authApi.login(data),
     onSuccess: (res) => {
-      console.log("hi");
+      // console.log("hi");
       const decoded = jwtDecode<JwtPayload>(res.value.accessToken);
-      console.log(decoded);
-      console.log("chưa set thành công");
+      //console.log(decoded);
+      // console.log(`hi + ${res.value.accessToken}`);
+      // console.log("chưa set thành công");
       setAuth({
         accessToken: res.value.accessToken,
         role: decoded.Role,
       });
-      console.log("đã set thành công rồi nha ");
+      // console.log("đã set thành công rồi nha ");
       toast.success("Đăng nhập thành công");
-      console.log(decoded.Role);
 
       if (decoded.Role === "Admin") {
         navigate("/admin", { replace: true });
       } else {
         navigate("/employee");
       }
-      console.log("navigate thành công");
+      // console.log("navigate thành công");
     },
   });
 };
@@ -82,7 +82,7 @@ export const useChangePasswordMutation = () => {
         error.response?.data?.message ||
         "Đổi mật khẩu thất bại, vui lòng kiểm tra lại!";
       toast.error(errorMsg);
-      console.log("Lỗi đổi pass:", error.response?.data);
+      // console.log("Lỗi đổi pass:", error.response?.data);
     },
   });
 };
@@ -120,9 +120,12 @@ export const useLogoutMutation = () => {
 };
 
 export const useUser = () => {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
   return useQuery({
     queryKey: ["me"], // id của cache
-
     queryFn: authApi.getMe,
+    enabled: !!accessToken,
+    retry: false,
   });
 };

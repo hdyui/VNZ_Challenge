@@ -58,29 +58,38 @@ function mapDetailResponse(raw: any): ApiResponse<NewsDetail> {
   };
 }
 
-// ─── Helper: build multipart/form-data cho create/update (backend nhận PascalCase) ──
-function buildNewsFormData(
+// ─── Helper: build JSON body cho create/update ───────────────────────────────
+// LƯU Ý QUAN TRỌNG: BE (CreateNewsRequest) hiện KHÔNG còn field kiểu IFormFile
+// nào cả — CoverImg giờ là string (URL ảnh đã upload sẵn qua /news/uploads).
+// Vì action không nhận file, ASP.NET Core sẽ bind tham số theo [FromBody]
+// (JSON), KHÔNG phải [FromForm]/multipart. Trước đây FE gửi FormData
+// (Content-Type: multipart/form-data) trong khi BE chỉ chấp nhận
+// application/json → BE trả lỗi "415 Unsupported Media Type". Do đó phải gửi
+// JSON thuần (application/json), không dùng FormData nữa.
+function buildNewsRequestBody(
   dto: Partial<CreateNewsDto> | Partial<UpdateNewsDto>,
-): FormData {
-  const fd = new FormData();
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
 
-  if (dto.title !== undefined) fd.append("Title", dto.title);
-  if (dto.slug !== undefined) fd.append("Slug", dto.slug);
+  if (dto.title !== undefined) body.title = dto.title;
+  if (dto.slug !== undefined) body.slug = dto.slug;
 
-  // CoverImg: chỉ gửi lên khi là File mới chọn (Swagger khai báo string($binary)).
-  // Nếu coverImg là string (ảnh cũ, không đổi) thì bỏ qua field này để backend giữ nguyên ảnh hiện tại.
-  if (dto.coverImg instanceof File) {
-    fd.append("CoverImg", dto.coverImg);
+  // CoverImg bắt buộc phải là string URL (đã upload sẵn qua /news/uploads).
+  if (typeof dto.coverImg === "string") {
+    body.coverImg = dto.coverImg;
   }
 
-  if (dto.contentHtml !== undefined) fd.append("ContentHtml", dto.contentHtml);
-  if (dto.contentJson !== undefined) {
-    fd.append("ContentJson", JSON.stringify(dto.contentJson));
-  }
-  if (dto.status !== undefined)
-    fd.append("Status", denormalizeStatus(dto.status));
+  if (dto.contentHtml !== undefined) body.contentHtml = dto.contentHtml;
+  // dto.contentJson đã là string JSON (được stringify sẵn ở NewsForm.submit),
+  // giữ nguyên dạng string, KHÔNG parse/stringify lại — BE nhận ContentJson
+  // là string.
+  if (dto.contentJson !== undefined) body.contentJson = dto.contentJson;
 
-  return fd;
+  // BE bắt buộc field Type (Public | Internal).
+  if (dto.type !== undefined) body.type = dto.type;
+  if (dto.status !== undefined) body.status = denormalizeStatus(dto.status);
+
+  return body;
 }
 
 export const newsApi = {
@@ -108,10 +117,13 @@ export const newsApi = {
       Pick<NewsDetail, "id" | "title" | "slug" | "status" | "createdAt">
     >
   > {
-    const formData = buildNewsFormData(dto);
-    const raw = await (apiClient.post("/news", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }) as unknown as Promise<any>);
+    const body = buildNewsRequestBody(dto);
+    // Gửi JSON (application/json) — action Create ở BE bind theo [FromBody],
+    // gửi multipart/form-data ở đây sẽ bị BE trả về 415 Unsupported Media Type.
+    const raw = await (apiClient.post(
+      "/news",
+      body,
+    ) as unknown as Promise<any>);
     const item = raw.value ?? raw.data ?? raw;
     return {
       statusCode:
@@ -132,10 +144,12 @@ export const newsApi = {
   ): Promise<
     ApiResponse<Pick<NewsDetail, "id" | "title" | "status" | "updatedAt">>
   > {
-    const formData = buildNewsFormData(dto);
-    const raw = await (apiClient.put(`/news/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }) as unknown as Promise<any>);
+    const body = buildNewsRequestBody(dto);
+    // Cùng lý do như create(): gửi JSON thay vì multipart/form-data.
+    const raw = await (apiClient.put(
+      `/news/${id}`,
+      body,
+    ) as unknown as Promise<any>);
     const item = raw.value ?? raw.data ?? raw;
     return {
       statusCode:
@@ -178,9 +192,10 @@ export const newsApi = {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 
-    const raw = await (apiClient.post(`/news/${id}/images`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }) as unknown as Promise<any>);
+    const raw = await (apiClient.post(
+      `/news/${id}/images`,
+      formData,
+    ) as unknown as Promise<any>);
 
     const data = raw.value ?? raw.data ?? raw;
     return {
@@ -195,15 +210,21 @@ export const newsApi = {
     };
   },
 
-  // ─── POST /auth/uploads (upload 1 ảnh, dùng cho ảnh bìa) ──────────────────────
-  async uploadImage(file: File): Promise<ApiResponse<UploadImageResult>> {
+  // ─── POST /news/uploads (upload 1 ảnh — dùng cho ảnh bìa & ảnh chèn trong nội dung) ──
+  // folder: tuỳ chọn, dùng để BE phân loại/tổ chức thư mục lưu trữ
+  // (vd "news-covers" cho ảnh bìa, "news-content" cho ảnh chèn nội dung).
+  async uploadImage(
+    file: File,
+    folder?: string,
+  ): Promise<ApiResponse<UploadImageResult>> {
     const formData = new FormData();
-    // ⚠️ Nếu backend expect field name khác "file" (vd "image"), đổi lại tại đây
-    formData.append("file", file);
+    formData.append("File", file);
+    if (folder) formData.append("Folder", folder);
 
-    const raw = await (apiClient.post("/auth/uploads", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }) as unknown as Promise<any>);
+    const raw = await (apiClient.post(
+      "/news/uploads",
+      formData,
+    ) as unknown as Promise<any>);
 
     const item = raw.value ?? raw.data ?? raw;
     return {

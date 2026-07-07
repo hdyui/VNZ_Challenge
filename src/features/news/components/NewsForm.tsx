@@ -34,6 +34,7 @@ const DEFAULT_VALUES: NewsFormSchemaType = {
   coverImg: "",
   contentHtml: "",
   contentJson: undefined,
+  type: "Public",
   status: "draft",
 };
 
@@ -115,54 +116,60 @@ export const NewsForm = ({
 
   const submit = (data: NewsFormSchemaType) => {
     const editor = quillRef.current?.getEditor();
-    const contentJson = editor ? editor.getContents() : data.contentJson;
+    // BE nhận contentJson là string, nên phải JSON.stringify() Delta object
+    // trước khi gửi đi — nếu gửi thẳng object sẽ bị lỗi
+    // "The JSON value could not be converted to System.String".
+    const contentJson = editor
+      ? JSON.stringify(editor.getContents())
+      : data.contentJson;
     onSubmit({ ...data, contentJson });
   };
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {isEdit ? "Chỉnh sửa bài viết" : "Viết bài mới"}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {isEdit
               ? "Cập nhật nội dung và thông tin bài viết"
               : "Tạo một bài viết tin tức mới"}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button
             type="button"
             variant="outline"
             onClick={() => navigate("/admin/news")}
             disabled={isLoading}
+            className="rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Hủy
           </Button>
           <Button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700"
+            className="rounded-lg bg-[#0F6B66] hover:bg-[#0B4F4B] text-white transition-colors shadow-sm"
             disabled={isLoading}
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
-              <Save className="h-4 w-4" />
+              <Save className="h-4 w-4 mr-2" />
             )}
             {isEdit ? "Lưu thay đổi" : "Đăng bài"}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cột chính: tiêu đề + nội dung */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* CỘT CHÍNH: Tiêu đề + Nội dung */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="shadow-sm border-gray-200">
-            <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Tiêu đề
+          <Card className="rounded-2xl shadow-sm shadow-slate-200/60 border-slate-200 bg-white transition-all">
+            <CardContent className="p-6 space-y-3">
+              <label className="text-sm font-semibold text-slate-700">
+                Tiêu đề bài viết
               </label>
               <Controller
                 name="title"
@@ -171,7 +178,7 @@ export const NewsForm = ({
                   <Input
                     {...field}
                     placeholder="Nhập tiêu đề bài viết..."
-                    className="h-11 rounded-xl border-gray-200 bg-slate-50 text-base focus:bg-white focus:border-blue-300"
+                    className="h-11 rounded-lg border-slate-300 bg-white text-base text-slate-900 focus:border-[#0F6B66] focus:ring-[#0F6B66]/20 transition-all shadow-sm"
                   />
                 )}
               />
@@ -181,16 +188,16 @@ export const NewsForm = ({
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-gray-200 overflow-visible">
-            <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Nội dung
+          <Card className="rounded-2xl shadow-sm shadow-slate-200/60 border-slate-200 bg-white overflow-visible transition-all">
+            <CardContent className="p-6 space-y-3">
+              <label className="text-sm font-semibold text-slate-700">
+                Nội dung chi tiết
               </label>
               <Controller
                 name="contentHtml"
                 control={control}
                 render={({ field }) => (
-                  <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                  <div className="rounded-xl overflow-hidden border border-slate-300 bg-white focus-within:border-[#0F6B66] focus-within:ring-1 focus-within:ring-[#0F6B66]/20 transition-all shadow-sm">
                     <ReactQuill
                       ref={quillRef}
                       theme="snow"
@@ -198,7 +205,7 @@ export const NewsForm = ({
                       onChange={field.onChange}
                       modules={modules}
                       placeholder="Nhập nội dung bài viết..."
-                      className="[&_.ql-container]:min-h-[360px] [&_.ql-container]:text-base"
+                      className="[&_.ql-container]:min-h-[400px] [&_.ql-container]:text-base [&_.ql-toolbar]:border-b-slate-200 [&_.ql-toolbar]:bg-slate-50/70"
                     />
                   </div>
                 )}
@@ -212,34 +219,57 @@ export const NewsForm = ({
           </Card>
         </div>
 
-        {/* Cột phụ: trạng thái + ảnh bìa */}
-        <div className="space-y-6">
-          <Card className="shadow-sm border-gray-200">
-            <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Trạng thái
-              </label>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Nháp</SelectItem>
-                      <SelectItem value="published">Đã xuất bản</SelectItem>
-                      <SelectItem value="archived">Lưu trữ</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+        {/* CỘT PHỤ: Trạng thái + Ảnh bìa */}
+        <div className="space-y-6 lg:sticky lg:top-6">
+          <Card className="rounded-2xl shadow-sm shadow-slate-200/60 border-slate-200 bg-white transition-all">
+            <CardContent className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Loại tin
+                </label>
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-10 w-full rounded-lg border-slate-300 bg-white text-slate-900 focus:border-[#0F6B66] focus:ring-[#0F6B66]/20 transition-all">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Public">Công khai</SelectItem>
+                        <SelectItem value="Internal">Nội bộ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-2 border-t border-slate-100 pt-4">
+                <label className="text-sm font-semibold text-slate-700">
+                  Trạng thái
+                </label>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-10 w-full rounded-lg border-slate-300 bg-white text-slate-900 focus:border-[#0F6B66] focus:ring-[#0F6B66]/20 transition-all">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Nháp</SelectItem>
+                        <SelectItem value="published">Đã xuất bản</SelectItem>
+                        <SelectItem value="archived">Lưu trữ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-gray-200">
-            <CardContent className="p-5 space-y-2">
+          <Card className="rounded-2xl shadow-sm shadow-slate-200/60 border-slate-200 bg-white transition-all">
+            <CardContent className="p-6">
               <Controller
                 name="coverImg"
                 control={control}
@@ -252,7 +282,7 @@ export const NewsForm = ({
                 )}
               />
               {errors.coverImg && (
-                <p className="text-xs text-red-500">
+                <p className="text-xs text-red-500 mt-2">
                   {errors.coverImg.message as string}
                 </p>
               )}

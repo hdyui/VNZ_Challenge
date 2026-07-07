@@ -97,14 +97,20 @@ export const AccountListPage = () => {
   const columns: ColumnDef<AccountListItem>[] = [
     {
       header: "Nhân viên",
-      cell: (item) => (
-        <div>
-          <p className="font-medium text-gray-800">
-            {item.user?.lastName ?? ""} {item.user?.firstName ?? ""}
-          </p>
-          <p className="text-xs text-gray-500">{item.user?.position ?? ""}</p>
-        </div>
-      ),
+      cell: (item) => {
+        const user = item.user;
+
+        return (
+          <div>
+            <p className="font-medium text-gray-800">
+              {user ? `${user.lastName} ${user.firstName}` : "Không xác định"}
+            </p>
+            <p className="text-xs text-gray-500">
+              {user?.position ?? "Chưa có vị trí"}
+            </p>
+          </div>
+        );
+      },
     },
     { header: "Email", cell: (item) => <span>{item.email}</span> },
     {
