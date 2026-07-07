@@ -11,10 +11,10 @@ import {
   LogOut,
   Menu,
   Search,
-  User,
   Clock,
   CalendarClock,
   ExternalLink,
+  ClipboardList,
 } from "lucide-react";
 import { useLogoutMutation, useUser } from "@/features/auth/hooks/useAuth";
 
@@ -32,6 +32,12 @@ const navItems = [
     to: "/admin/recruitments",
     label: "Recruiting",
     icon: Briefcase,
+    end: false,
+  },
+  {
+    to: "/admin/applications",
+    label: "Applications",
+    icon: ClipboardList,
     end: false,
   },
   {
@@ -60,7 +66,7 @@ const AdminMainLayout = () => {
     refetch,
     isFetching,
   } = useUser();
-  // console.log(user);
+
   const handleLogout = async () => {
     useHandleLogout.mutate();
   };
@@ -96,7 +102,7 @@ const AdminMainLayout = () => {
           </NavLink>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1.5">
+        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -112,9 +118,7 @@ const AdminMainLayout = () => {
                   }`
                 }
               >
-                <Icon
-                  className={`w-5 h-5 ${/* Ẩn bớt độ đậm của icon nếu không active */ ""}`}
-                />
+                <Icon className="w-5 h-5" />
                 <span>{item.label}</span>
               </NavLink>
             );
@@ -190,15 +194,18 @@ const AdminMainLayout = () => {
               <Link to="/">
                 <Button
                   variant="outline"
-                  className="hidden sm:flex items-center gap-2 text-gray-600"
+                  className="hidden sm:flex items-center gap-2 text-gray-600 rounded-xl"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Về trang chủ
                 </Button>
               </Link>
 
-              <Button variant="ghost" className="p-2">
-                <Bell className="w-5 h-5" />
+              <Button
+                variant="ghost"
+                className="p-2 rounded-xl hover:bg-gray-100"
+              >
+                <Bell className="w-5 h-5 text-gray-600" />
               </Button>
 
               {token ? (

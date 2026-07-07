@@ -249,7 +249,7 @@ const RecruitmentPage = () => {
             variant="ghost"
             aria-label={`Sửa vị trí ${item.title}`}
             title="Sửa"
-            className="h-9 w-9 rounded-lg text-slate-500 hover:text-[#0F6B66] hover:bg-[#0F6B66]/10 transition-colors"
+            className="h-9 w-9 rounded-lg text-slate-500 hover:text-gray-900 hover:bg-gray-900/10 transition-colors"
             onClick={() => navigate(`/admin/recruitments/update/${item.id}`)}
           >
             <Edit className="h-4 w-4" />
@@ -284,9 +284,9 @@ const RecruitmentPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0F6B66]/10 text-[#0F6B66]">
+          <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gray-900/10 text-gray-900">
             <BriefcaseBusiness className="h-5 w-5" />
-            <Sparkles className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 text-[#0F6B66]" />
+            <Sparkles className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 text-gray-900" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -299,7 +299,7 @@ const RecruitmentPage = () => {
         </div>
         <Button
           onClick={() => navigate("/admin/recruitments/create")}
-          className="gap-2 rounded-lg bg-[#0F6B66] hover:bg-[#0B4F4B] text-white w-40 h-9 transition-colors"
+          className="gap-2 rounded-lg bg-gray-900 hover:bg-black text-white w-40 h-9 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Vị trí mới
@@ -316,7 +316,7 @@ const RecruitmentPage = () => {
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Tìm kiếm theo tiêu đề hoặc phòng ban..."
               aria-label="Tìm kiếm theo tiêu đề hoặc phòng ban"
-              className="h-11 rounded-full border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-700 shadow-sm transition-all focus:border-[#0F6B66] focus:ring-4 focus:ring-[#0F6B66]/20 focus:outline-none"
+              className="h-11 rounded-full border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-700 shadow-sm transition-all focus:border-gray-900 focus:ring-4 focus:ring-gray-900/20 focus:outline-none"
             />
           </div>
           {searchInput ? (
@@ -337,7 +337,7 @@ const RecruitmentPage = () => {
             Cấp bậc
           </div>
           <Select value={level} onValueChange={handleLevelChange}>
-            <SelectTrigger className="h-11 w-[140px] rounded-full border-slate-300 bg-white shadow-sm transition-all focus:border-[#0F6B66] focus:ring-4 focus:ring-[#0F6B66]/20 focus:outline-none">
+            <SelectTrigger className="h-11 w-[140px] rounded-full border-slate-300 bg-white shadow-sm transition-all focus:border-gray-900 focus:ring-4 focus:ring-gray-900/20 focus:outline-none">
               <SelectValue placeholder="Tất cả cấp bậc" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-slate-200 shadow-sm shadow-slate-200/60">
@@ -361,8 +361,8 @@ const RecruitmentPage = () => {
           {isLoading ? (
             <div className="py-20 flex flex-col items-center gap-4 text-slate-500">
               <div className="flex items-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin text-[#0F6B66]" />
-                <span className="text-sm font-medium text-[#0F6B66]">
+                <Loader2 className="h-5 w-5 animate-spin text-gray-900" />
+                <span className="text-sm font-medium text-gray-900">
                   Đang tải dữ liệu...
                 </span>
               </div>

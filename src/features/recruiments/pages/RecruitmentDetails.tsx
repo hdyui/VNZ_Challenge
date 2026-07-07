@@ -52,6 +52,18 @@ const LEVEL_COLOR: Record<RecruitmentLevel, string> = {
     "bg-gradient-to-r from-amber-100 to-amber-50 text-amber-700 border-amber-200",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  Open: "Đang mở",
+  Draft: "Bản nháp",
+  Closed: "Đã đóng",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  Open: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Draft: "bg-slate-100 text-slate-600 border-slate-200",
+  Closed: "bg-red-50 text-red-600 border-red-200",
+};
+
 const MetaItem = ({
   icon: Icon,
   label,
@@ -62,8 +74,8 @@ const MetaItem = ({
   value: React.ReactNode;
 }) => (
   <div className="flex items-start gap-3">
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0F6B66]/10 mt-0.5">
-      <Icon className="h-4 w-4 text-[#0F6B66]" />
+    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900/10 mt-0.5">
+      <Icon className="h-4 w-4 text-gray-900" />
     </div>
     <div>
       <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">
@@ -201,7 +213,7 @@ const ApplyDialog = ({
               </DialogTitle>
               <DialogDescription className="text-sm text-slate-500">
                 {positionTitle && (
-                  <span className="font-medium text-[#0F6B66]">
+                  <span className="font-medium text-gray-900">
                     {positionTitle}
                   </span>
                 )}
@@ -218,7 +230,7 @@ const ApplyDialog = ({
                   placeholder="Nguyễn Văn A"
                   value={form.fullName}
                   onChange={(e) => handleChange("fullName", e.target.value)}
-                  className={`border-slate-200 focus-visible:ring-[#0F6B66] ${errors.fullName ? "border-red-300" : ""}`}
+                  className={`border-slate-200 focus-visible:ring-gray-900 ${errors.fullName ? "border-red-300" : ""}`}
                 />
                 {errors.fullName && (
                   <p className="text-xs text-red-500">{errors.fullName}</p>
@@ -236,7 +248,7 @@ const ApplyDialog = ({
                     placeholder="you@email.com"
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className={`border-slate-200 focus-visible:ring-[#0F6B66] ${errors.email ? "border-red-300" : ""}`}
+                    className={`border-slate-200 focus-visible:ring-gray-900 ${errors.email ? "border-red-300" : ""}`}
                   />
                   {errors.email && (
                     <p className="text-xs text-red-500">{errors.email}</p>
@@ -251,7 +263,7 @@ const ApplyDialog = ({
                     placeholder="0901 234 567"
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className={`border-slate-200 focus-visible:ring-[#0F6B66] ${errors.phone ? "border-red-300" : ""}`}
+                    className={`border-slate-200 focus-visible:ring-gray-900 ${errors.phone ? "border-red-300" : ""}`}
                   />
                   {errors.phone && (
                     <p className="text-xs text-red-500">{errors.phone}</p>
@@ -269,7 +281,7 @@ const ApplyDialog = ({
                   placeholder="Hồ Chí Minh..."
                   value={form.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  className="border-gray-200 focus-visible:ring-indigo-500"
+                  className="border-gray-200 focus-visible:ring-gray-900"
                 />
               </div>
 
@@ -287,7 +299,7 @@ const ApplyDialog = ({
                     if (errors.cvFile)
                       setErrors((prev) => ({ ...prev, cvFile: undefined }));
                   }}
-                  className={`border-gray-200 file:text-indigo-600 focus-visible:ring-indigo-500 cursor-pointer ${errors.cvFile ? "border-red-300" : ""}`}
+                  className={`border-gray-200 file:text-gray-900 focus-visible:ring-gray-900 cursor-pointer ${errors.cvFile ? "border-red-300" : ""}`}
                 />
                 {errors.cvFile && (
                   <p className="text-xs text-red-500">{errors.cvFile}</p>
@@ -307,7 +319,7 @@ const ApplyDialog = ({
               <Button
                 onClick={handleSubmit}
                 disabled={isPending}
-                className="gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25 min-w-[120px]"
+                className="gap-2 bg-gray-900 hover:bg-black shadow-lg shadow-gray-900/25 min-w-[120px]"
               >
                 {isPending ? (
                   <>
@@ -342,7 +354,7 @@ const RecruitmentDetails = () => {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0F6B66]/5 via-white to-white p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900/5 via-white to-white p-6 flex items-center justify-center">
         <Card className="w-full max-w-md text-center border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
           <CardContent className="pt-10 pb-10 space-y-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 mx-auto">
@@ -368,7 +380,7 @@ const RecruitmentDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0F6B66]/5 via-white to-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900/5 via-white to-white p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Top bar: back + quick apply */}
         <div className="flex items-center justify-between gap-4">
@@ -398,20 +410,75 @@ const RecruitmentDetails = () => {
           )
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Sidebar */}
-          <div className="space-y-4">
-            {/* Meta card */}
+        <div className="space-y-6">
+          {/* 1. Thông tin cơ bản — full width */}
+          <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
+            <CardContent className="pt-6 pb-6">
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-7 w-3/4" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <h1 className="text-2xl font-bold text-slate-900 leading-tight">
+                      {detail?.title}
+                    </h1>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {detail?.status && (
+                        <span
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_COLOR[detail.status] ?? "bg-slate-100 text-slate-600 border-slate-200"}`}
+                        >
+                          {STATUS_LABEL[detail.status] ?? detail.status}
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${detail?.level ? LEVEL_COLOR[detail.level] : ""}`}
+                      >
+                        {detail?.level}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {typeof detail?.department === "object"
+                        ? (detail.department as { name: string })?.name
+                        : detail?.department}
+                    </span>
+                    {detail?.location && (
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {detail.location}
+                      </span>
+                    )}
+                    {detail?.deadline && (
+                      <span className="flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        Hạn nộp:{" "}
+                        {format(new Date(detail.deadline), "dd/MM/yyyy HH:mm")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 2. Ba bảng nhỏ — xếp hàng ngang */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {/* Bảng 1: Đơn vị & cấp bậc */}
             <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
-                  Thông tin vị trí
+                  Đơn vị &amp; cấp bậc
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
                   <>
-                    {Array.from({ length: 7 }).map((_, i) => (
+                    {Array.from({ length: 2 }).map((_, i) => (
                       <Skeleton key={i} className="h-8 w-full" />
                     ))}
                   </>
@@ -440,7 +507,27 @@ const RecruitmentDetails = () => {
                         ) : null
                       }
                     />
-                    <Separator className="bg-slate-100" />
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Bảng 2: Hình thức làm việc */}
+            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                  Hình thức làm việc
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoading ? (
+                  <>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-8 w-full" />
+                    ))}
+                  </>
+                ) : (
+                  <>
                     <MetaItem
                       icon={MapPin}
                       label="Địa điểm"
@@ -466,7 +553,27 @@ const RecruitmentDetails = () => {
                           : "Đang cập nhật"
                       }
                     />
-                    <Separator className="bg-slate-100" />
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Bảng 3: Thời gian & thống kê */}
+            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                  Thời gian &amp; thống kê
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoading ? (
+                  <>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-8 w-full" />
+                    ))}
+                  </>
+                ) : (
+                  <>
                     <MetaItem
                       icon={CalendarClock}
                       label="Hạn nộp hồ sơ"
@@ -501,115 +608,63 @@ const RecruitmentDetails = () => {
             </Card>
           </div>
 
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-5">
-            {/* Title header */}
-            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
-              <CardContent className="pt-6 pb-6">
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-7 w-3/4" />
-                    <Skeleton className="h-4 w-1/3" />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <h1 className="text-2xl font-bold text-slate-900 leading-tight">
-                        {detail?.title}
-                      </h1>
-                      <span
-                        className={`shrink-0 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${detail?.level ? LEVEL_COLOR[detail.level] : ""}`}
-                      >
-                        {detail?.level}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-slate-500">
-                      <span className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5" />
-                        {typeof detail?.department === "object"
-                          ? (detail.department as { name: string })?.name
-                          : detail?.department}
-                      </span>
-                      {detail?.location && (
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {detail.location}
-                        </span>
-                      )}
-                      {detail?.deadline && (
-                        <span className="flex items-center gap-1.5">
-                          <CalendarClock className="h-3.5 w-3.5" />
-                          Hạn nộp:{" "}
-                          {format(
-                            new Date(detail.deadline),
-                            "dd/MM/yyyy HH:mm",
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Content: mô tả công việc + yêu cầu + quyền lợi (rich text) */}
-            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
-                  Chi tiết công việc
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <Skeleton
-                        key={i}
-                        className={`h-4 ${i === 5 ? "w-2/3" : "w-full"}`}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    className="prose prose-sm prose-gray max-w-none text-slate-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{
-                      __html: detail?.contentHtml ?? "",
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Bottom apply CTA
-            {!isLoading && (
-              <div className="relative overflow-hidden rounded-2xl border border-[#0F6B66]/15 bg-gradient-to-r from-[#0F6B66]/5 via-white to-amber-50/40 p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
-                <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#0F6B66]/10 blur-3xl" />
-                <div className="relative">
-                  <p className="text-base font-semibold text-slate-900">
-                    {isClosed
-                      ? "Vị trí này hiện đã đóng tuyển"
-                      : "Sẵn sàng ứng tuyển?"}
-                  </p>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    {isClosed
-                      ? "Hãy theo dõi các vị trí khác đang mở."
-                      : "Tham gia đội ngũ của chúng tôi và tạo ra sự khác biệt."}
-                  </p>
+          {/* 3. Khung nội dung mô tả — full width */}
+          <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                Chi tiết công việc
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton
+                      key={i}
+                      className={`h-4 ${i === 5 ? "w-2/3" : "w-full"}`}
+                    />
+                  ))}
                 </div>
-                <div className="relative w-full sm:w-auto shrink-0">
-                  <Button
-                    onClick={() =>
-                      isClosed ? navigate("/recruitments") : setApplyOpen(true)
-                    }
-                    className="w-full sm:w-auto gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25"
-                  >
-                    <Send className="h-4 w-4" />
-                    {isClosed ? "Xem các vị trí khác" : "Ứng tuyển ngay"}
-                  </Button>
-                </div>
+              ) : (
+                <div
+                  className="prose prose-sm prose-gray max-w-none text-slate-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{
+                    __html: detail?.contentHtml ?? "",
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bottom apply CTA */}
+          {/* {!isLoading && (
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-gray-900/5 via-white to-white p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
+              <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gray-900/5 blur-3xl" />
+              <div className="relative">
+                <p className="text-base font-semibold text-slate-900">
+                  {isClosed
+                    ? "Vị trí này hiện đã đóng tuyển"
+                    : "Sẵn sàng ứng tuyển?"}
+                </p>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {isClosed
+                    ? "Hãy theo dõi các vị trí khác đang mở."
+                    : "Tham gia đội ngũ của chúng tôi và tạo ra sự khác biệt."}
+                </p>
               </div>
-            )} */}
-          </div>
+              <div className="relative w-full sm:w-auto shrink-0">
+                <Button
+                  onClick={() =>
+                    isClosed ? navigate("/recruitments") : setApplyOpen(true)
+                  }
+                  className="w-full sm:w-auto gap-2 bg-gray-900 hover:bg-black shadow-lg shadow-gray-900/25"
+                >
+                  <Send className="h-4 w-4" />
+                  {isClosed ? "Xem các vị trí khác" : "Ứng tuyển ngay"}
+                </Button>
+              </div>
+            </div>
+          )} */}
         </div>
       </div>
 

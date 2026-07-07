@@ -124,7 +124,7 @@ export default function ScheduleDuplicateForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
         >
           {isSubmitting ? "Đang xử lý..." : "Nhân bản"}
         </button>

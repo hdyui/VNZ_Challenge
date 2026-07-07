@@ -115,19 +115,19 @@ export default function ScheduleListPage() {
         <div className="flex gap-2">
           <Link
             to="/admin/schedules/duplicate-create"
-            className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
+            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600"
           >
             Nhân bản lịch
           </Link>
           <Link
             to="/admin/schedules/create"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600"
           >
             + Tạo lịch
           </Link>
           <Link
             to="/admin/leave-applications"
-            className="rounded-md border border-amber-500 px-4 py-2 text-sm font-medium text-amber-600 hover:bg-amber-50"
+            className="rounded-md border border-gray-900 bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600"
           >
             Đơn xin nghỉ
           </Link>

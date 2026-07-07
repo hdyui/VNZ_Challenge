@@ -97,7 +97,7 @@ export default function ScheduleForm({
         <input
           type="date"
           {...register("workDate")}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
         />
         {errors.workDate && (
           <p className="mt-1 text-sm text-red-500">{errors.workDate.message}</p>
@@ -109,7 +109,7 @@ export default function ScheduleForm({
         </label>
         <select
           {...register("employeeId")}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
         >
           <option value="">-- Chọn nhân viên --</option>
           {selectableEmployees.map((e) => (
@@ -166,7 +166,7 @@ export default function ScheduleForm({
           <select
             value={selectedShiftId ?? ""}
             onChange={(e) => handleShiftChange(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
             <option value="">-- Chọn ca làm --</option>
             {shifts.map((s) => (
@@ -191,7 +191,7 @@ export default function ScheduleForm({
               type="time"
               step={1}
               {...register("startTime")}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
             />
             {errors.startTime && (
               <p className="mt-1 text-sm text-red-500">
@@ -207,7 +207,7 @@ export default function ScheduleForm({
               type="time"
               step={1}
               {...register("endTime")}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
             />
             {errors.endTime && (
               <p className="mt-1 text-sm text-red-500">
@@ -238,7 +238,7 @@ export default function ScheduleForm({
         <textarea
           {...register("note")}
           rows={3}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
           placeholder="Ghi chú thêm (không bắt buộc)"
         />
       </div>
@@ -247,7 +247,7 @@ export default function ScheduleForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
         >
           {isSubmitting ? "Đang lưu..." : submitLabel}
         </button>

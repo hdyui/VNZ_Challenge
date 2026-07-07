@@ -24,7 +24,7 @@ const localizer = dateFnsLocalizer({
 });
 
 const STATUS_COLOR: Record<string, string> = {
-  Working: "#2563eb",
+  Working: "#111827",
   Off: "#9ca3af",
   Absent: "#dc2626",
   Completed: "#16a34a",
@@ -93,7 +93,7 @@ export default function ScheduleCalendar({
         onSelectEvent={(event) => onSelectEvent(event.resource)}
         eventPropGetter={(event) => ({
           style: {
-            backgroundColor: STATUS_COLOR[event.resource.status] ?? "#2563eb",
+            backgroundColor: STATUS_COLOR[event.resource.status] ?? "#111827",
             borderRadius: 6,
             border: "none",
             fontSize: 12,

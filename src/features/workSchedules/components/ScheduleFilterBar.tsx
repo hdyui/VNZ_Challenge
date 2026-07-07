@@ -1,4 +1,4 @@
-import { WorkScheduleStatus, type ScheduleView } from '../type';
+import { WorkScheduleStatus, type ScheduleView } from "../type";
 
 export interface SimpleOption {
   id: string;
@@ -23,17 +23,17 @@ interface ScheduleFilterBarProps {
 }
 
 const VIEW_OPTIONS: { value: ScheduleView; label: string }[] = [
-  { value: 'day', label: 'Ngày' },
-  { value: 'week', label: 'Tuần' },
-  { value: 'month', label: 'Tháng' },
-  { value: 'year', label: 'Năm' },
+  { value: "day", label: "Ngày" },
+  { value: "week", label: "Tuần" },
+  { value: "month", label: "Tháng" },
+  { value: "year", label: "Năm" },
 ];
 
 const STATUS_OPTIONS = [
-  { value: WorkScheduleStatus.Working, label: 'Đang làm việc' },
-  { value: WorkScheduleStatus.Off, label: 'Nghỉ theo lịch' },
-  { value: WorkScheduleStatus.Absent, label: 'Vắng mặt' },
-  { value: WorkScheduleStatus.Completed, label: 'Đã hoàn thành' },
+  { value: WorkScheduleStatus.Working, label: "Đang làm việc" },
+  { value: WorkScheduleStatus.Off, label: "Nghỉ theo lịch" },
+  { value: WorkScheduleStatus.Absent, label: "Vắng mặt" },
+  { value: WorkScheduleStatus.Completed, label: "Đã hoàn thành" },
 ];
 
 export default function ScheduleFilterBar({
@@ -64,8 +64,8 @@ export default function ScheduleFilterBar({
               onClick={() => onViewChange(opt.value)}
               className={`px-3 py-1.5 text-sm ${
                 view === opt.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
               {opt.label}
@@ -82,7 +82,7 @@ export default function ScheduleFilterBar({
           type="date"
           value={date}
           onChange={(e) => onDateChange(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
         />
       </div>
 
@@ -93,9 +93,9 @@ export default function ScheduleFilterBar({
               Nhân viên
             </label>
             <select
-              value={employeeId ?? ''}
+              value={employeeId ?? ""}
               onChange={(e) => onEmployeeChange(e.target.value || undefined)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 min-w-[160px]"
             >
               <option value="">Tất cả</option>
               {employees.map((e) => (
@@ -111,9 +111,9 @@ export default function ScheduleFilterBar({
               Phòng ban
             </label>
             <select
-              value={departmentId ?? ''}
+              value={departmentId ?? ""}
               onChange={(e) => onDepartmentChange(e.target.value || undefined)}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 min-w-[160px]"
             >
               <option value="">Tất cả</option>
               {departments.map((d) => (
@@ -131,11 +131,11 @@ export default function ScheduleFilterBar({
           Trạng thái
         </label>
         <select
-          value={status ?? ''}
+          value={status ?? ""}
           onChange={(e) =>
             onStatusChange((e.target.value as WorkScheduleStatus) || undefined)
           }
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[160px]"
+          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 min-w-[160px]"
         >
           <option value="">Tất cả</option>
           {STATUS_OPTIONS.map((s) => (

@@ -68,7 +68,7 @@ export const AdminDashboardPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3 self-start sm:self-auto">
-          <Link to="/">
+          {/* <Link to="/">
             <Button
               variant="outline"
               size="sm"
@@ -77,7 +77,7 @@ export const AdminDashboardPage = () => {
               <Home className="w-4 h-4" />
               <span className="hidden sm:inline">Về Public</span>
             </Button>
-          </Link>
+          </Link> */}
           <Button
             variant="default"
             size="sm"

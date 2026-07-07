@@ -5,11 +5,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import { Loader2, Save } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  FileText,
+  ListChecks,
+  CalendarRange,
+  ImageIcon,
+  Briefcase, // Đã thêm icon Briefcase cho phần thông tin chung
+} from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Card, CardContent } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -29,10 +42,6 @@ import {
 } from "../schema";
 import { useDepartments } from "../hooks/useRecruitment";
 
-// NOTE: CoverImageUploader và newsApi.uploadImage hiện đang sống trong feature
-// `news`. Ảnh bìa / ảnh chèn trong nội dung recruitment tái dùng tạm 2 thứ này
-// để không phải build lại upload flow. Nếu về sau có endpoint upload riêng cho
-// recruitment, chỉ cần đổi 2 import bên dưới.
 import { CoverImageUploader } from "@/features/news/components/CoverImageUploader";
 import { newsApi } from "@/features/news/services";
 
@@ -47,7 +56,6 @@ interface RecruitmentFormProps {
   onSubmit: (data: RecruitmentFormSchemaType) => void;
   isLoading?: boolean;
   isEdit?: boolean;
-  /** Slot cho action riêng của page cha, vd nút Xóa ở trang chỉnh sửa */
   headerExtra?: React.ReactNode;
 }
 
@@ -74,7 +82,6 @@ export const RecruitmentForm = ({
     defaultValues: { ...EMPTY_RECRUITMENT_FORM, ...initialData },
   });
 
-  // ─── Xử lý chèn ảnh trong nội dung (toolbar "image") ─────────────────────
   const imageHandler = useMemo(
     () =>
       async function (this: any) {
@@ -133,9 +140,6 @@ export const RecruitmentForm = ({
 
   const submit = (data: RecruitmentFormSchemaType) => {
     const editor = quillRef.current?.getEditor();
-    // BE nhận contentJson là string (JSON.stringify của Quill Delta), không
-    // phải object thô — nếu gửi object sẽ bị lỗi "could not be converted to
-    // System.String" ở BE.
     const contentJson = editor
       ? JSON.stringify(editor.getContents())
       : data.contentJson;
@@ -144,7 +148,7 @@ export const RecruitmentForm = ({
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
-      <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-gradient-to-r from-white via-white to-[#0F6B66]/5 p-5 shadow-sm">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-gradient-to-r from-white via-white to-gray-900/5 p-5 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {isEdit
@@ -170,7 +174,7 @@ export const RecruitmentForm = ({
           </Button>
           <Button
             type="submit"
-            className="gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25"
+            className="gap-2 bg-gray-900 hover:bg-black shadow-lg shadow-gray-900/25"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -183,66 +187,46 @@ export const RecruitmentForm = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cột chính: tiêu đề + nội dung */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
-            <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Tiêu đề vị trí
-              </label>
-              <Controller
-                name="title"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    placeholder="vd: Lập trình viên Frontend"
-                    className="h-11 rounded-xl border-slate-200 bg-slate-50 text-base focus:bg-white focus:border-[#0F6B66]/40"
-                  />
-                )}
-              />
-              {errors.title && (
-                <p className="text-xs text-red-500">{errors.title.message}</p>
+      <div className="space-y-6">
+        {/* 1. Thông tin cơ bản — full width */}
+        <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl overflow-visible">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">
+              <Briefcase className="h-4 w-4 text-slate-400" />
+              Thông tin cơ bản
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Tiêu đề vị trí
+            </label>
+            <Controller
+              name="title"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  placeholder="vd: Lập trình viên Frontend"
+                  className="h-12 rounded-xl border-slate-200 bg-white text-lg font-medium focus:border-gray-900/40"
+                />
               )}
-            </CardContent>
-          </Card>
+            />
+            {errors.title && (
+              <p className="text-xs text-red-500">{errors.title.message}</p>
+            )}
+          </CardContent>
+        </Card>
 
-          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl overflow-visible">
-            <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Nội dung (mô tả công việc, yêu cầu, quyền lợi...)
-              </label>
-              <Controller
-                name="contentHtml"
-                control={control}
-                render={({ field }) => (
-                  <div className="rounded-xl overflow-hidden border border-slate-200 bg-white focus-within:border-[#0F6B66]/40 focus-within:ring-1 focus-within:ring-[#0F6B66]/15 transition-colors">
-                    <ReactQuill
-                      ref={quillRef}
-                      theme="snow"
-                      value={field.value}
-                      onChange={field.onChange}
-                      modules={modules}
-                      placeholder="Mô tả trách nhiệm, yêu cầu ứng viên, quyền lợi..."
-                      className="[&_.ql-container]:min-h-[360px] [&_.ql-container]:text-base"
-                    />
-                  </div>
-                )}
-              />
-              {errors.contentHtml && (
-                <p className="text-xs text-red-500">
-                  {errors.contentHtml.message}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Cột phụ: thông tin tuyển dụng + ảnh bìa */}
-        <div className="space-y-6">
+        {/* 2. Ba bảng nhỏ — xếp hàng ngang */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
-            <CardContent className="p-5 space-y-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                <ListChecks className="h-4 w-4 text-slate-400" />
+                Phân loại vị trí
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700">
                   Phòng ban
@@ -349,7 +333,7 @@ export const RecruitmentForm = ({
                     <Input
                       {...field}
                       placeholder="vd: Hà Nội / Hồ Chí Minh / Remote"
-                      className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
+                      className="h-11 rounded-xl border-slate-200 bg-white focus:border-gray-900/40"
                     />
                   )}
                 />
@@ -359,7 +343,17 @@ export const RecruitmentForm = ({
                   </p>
                 )}
               </div>
+            </CardContent>
+          </Card>
 
+          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                <CalendarRange className="h-4 w-4 text-slate-400" />
+                Chỉ tiêu &amp; thời hạn
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">
@@ -374,7 +368,7 @@ export const RecruitmentForm = ({
                         min={1}
                         {...field}
                         value={field.value ?? ""}
-                        className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
+                        className="h-11 rounded-xl border-slate-200 bg-white focus:border-gray-900/40"
                       />
                     )}
                   />
@@ -398,7 +392,7 @@ export const RecruitmentForm = ({
                         min={1}
                         {...field}
                         value={field.value ?? ""}
-                        className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
+                        className="h-11 rounded-xl border-slate-200 bg-white focus:border-gray-900/40"
                       />
                     )}
                   />
@@ -421,7 +415,7 @@ export const RecruitmentForm = ({
                     <Input
                       type="datetime-local"
                       {...field}
-                      className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
+                      className="h-11 rounded-xl border-slate-200 bg-white focus:border-gray-900/40"
                     />
                   )}
                 />
@@ -459,10 +453,13 @@ export const RecruitmentForm = ({
           </Card>
 
           <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
-            <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-slate-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">
+                <ImageIcon className="h-4 w-4 text-slate-400" />
                 Ảnh bìa
-              </label>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-2">
               <Controller
                 name="coverImageUrl"
                 control={control}
@@ -482,6 +479,43 @@ export const RecruitmentForm = ({
             </CardContent>
           </Card>
         </div>
+
+        {/* 3. Khung soạn nội dung mô tả — full width */}
+        <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl overflow-visible">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-600 uppercase tracking-wide">
+              <FileText className="h-4 w-4 text-slate-400" />
+              Nội dung mô tả
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            <p className="text-xs text-slate-400 -mt-1">
+              Mô tả công việc, yêu cầu ứng viên và quyền lợi
+            </p>
+            <Controller
+              name="contentHtml"
+              control={control}
+              render={({ field }) => (
+                <div className="rounded-xl overflow-hidden border border-slate-200 bg-white focus-within:border-gray-900/40 focus-within:ring-1 focus-within:ring-gray-900/15 transition-colors">
+                  <ReactQuill
+                    ref={quillRef}
+                    theme="snow"
+                    value={field.value}
+                    onChange={field.onChange}
+                    modules={modules}
+                    placeholder="Mô tả trách nhiệm, yêu cầu ứng viên, quyền lợi..."
+                    className="[&_.ql-container]:min-h-[360px] [&_.ql-container]:text-base"
+                  />
+                </div>
+              )}
+            />
+            {errors.contentHtml && (
+              <p className="text-xs text-red-500">
+                {errors.contentHtml.message}
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </form>
   );
