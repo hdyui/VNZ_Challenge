@@ -140,3 +140,32 @@ export const toRecruitmentPayload = (
   level: data.level,
   departmentId: data.departmentId,
 });
+
+// ─── Apply Form Schema (Dành cho Candidate nộp đơn) ───────────────────────
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["application/pdf"];
+
+export const ApplyFormSchema = z.object({
+  fullName: z.string().trim().min(1, "Họ và tên là bắt buộc."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email là bắt buộc.")
+    .email("Email không hợp lệ."),
+  phone: z.string().trim().min(1, "Số điện thoại là bắt buộc."),
+  address: z.string().optional(),
+  cvFile: z
+    .any()
+    .refine((file) => file, "Vui lòng tải lên CV của bạn.")
+    .refine(
+      (file) => file?.size <= MAX_FILE_SIZE,
+      "Kích thước file tối đa 5MB.",
+    )
+    .refine(
+      (file) => ACCEPTED_FILE_TYPES.includes(file?.type),
+      "Hệ thống chỉ chấp nhận định dạng PDF (.pdf).",
+    ),
+});
+
+export type ApplyFormSchemaType = z.infer<typeof ApplyFormSchema>;

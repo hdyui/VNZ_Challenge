@@ -1,6 +1,7 @@
 import apiClient from "@/lib/axios";
 
 import type { UpdateProfilePayload } from "./hooks/useUser";
+import type { ApiResponse } from "@/shared/types/types";
 
 export const userApi = {
   updateProfile: (userId: string, data: UpdateProfilePayload) => {
@@ -39,4 +40,56 @@ export const userApi = {
   },
 
   deleteUser: (userId: string) => apiClient.delete(`/users/${userId}`),
+
+  // ==================== QUẢN LÝ NGHỈ PHÉP (LEAVE APPLICATION) ====================
+
+  // 1. Xin nghỉ dài ngày
+  async createLeaveApplication(payload: any): Promise<ApiResponse<null>> {
+    return apiClient.post("/leave-application", payload) as unknown as Promise<
+      ApiResponse<null>
+    >;
+  },
+
+  // 2. Lấy danh sách ca làm việc để xin nghỉ
+  async getWorkSchedules(params: {
+    FromDate: string;
+    ToDate: string;
+  }): Promise<ApiResponse<any>> {
+    return apiClient.get("/schedule-leave-application/me/work-schedules", {
+      params,
+    }) as unknown as Promise<ApiResponse<any>>;
+  },
+
+  // 3. Xin nghỉ theo ca
+
+  async createScheduleLeave(
+    workScheduleId: string,
+    payload: any,
+  ): Promise<ApiResponse<null>> {
+    return apiClient.post(
+      `/schedule-leave-application/${workScheduleId}`,
+      payload,
+    ) as unknown as Promise<ApiResponse<null>>;
+  },
+
+  // 4. Lấy danh sách lịch sử xin nghỉ của tôi
+  async getMyLeaves(params: any): Promise<ApiResponse<any>> {
+    return apiClient.get("/leave-application/me", {
+      params,
+    }) as unknown as Promise<ApiResponse<any>>;
+  },
+
+  // 5. Lấy chi tiết 1 đơn xin nghỉ
+  async getLeaveDetail(id: string): Promise<ApiResponse<any>> {
+    return apiClient.get(`/leave-application/me/${id}`) as unknown as Promise<
+      ApiResponse<any>
+    >;
+  },
+
+  // 6. Hủy đơn xin nghỉ (Chỉ dùng khi Pending)
+  async cancelLeave(id: string): Promise<ApiResponse<null>> {
+    return apiClient.patch(
+      `/leave-application/${id}/cancel`,
+    ) as unknown as Promise<ApiResponse<null>>;
+  },
 };

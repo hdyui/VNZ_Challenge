@@ -52,7 +52,9 @@ export interface UpdateProfileRequest {
   coverImg?: string | null;
 }
 
-export type AccountRole = "Admin" | "Employee";
+// src/features/accounts/type.ts
+
+export type AccountRole = "Admin" | "Employee" | "Applicant";
 export type AccountStatus = "Active" | "Inactive";
 
 // Thông tin user rút gọn trả về trong list
@@ -69,7 +71,7 @@ export interface AccountListItem {
   email: string;
   role: AccountRole;
   status: AccountStatus;
-  user: UserShort;
+  user: UserShort | null;
   createdAt: string;
   updatedAt: string | null;
 }

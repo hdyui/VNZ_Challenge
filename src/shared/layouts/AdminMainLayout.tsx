@@ -20,12 +20,7 @@ import { useLogoutMutation, useUser } from "@/features/auth/hooks/useAuth";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: Home, end: true },
-  {
-    to: "/admin/accounts",
-    label: "Employee Accounts",
-    icon: Users,
-    end: false,
-  },
+  { to: "/admin/accounts", label: "Accounts", icon: Users, end: false },
   {
     to: "/admin/departments",
     label: "Departments",
@@ -59,11 +54,11 @@ const AdminMainLayout = () => {
 
   const {
     data: user,
-    isLoading, // true = lần đầu fetch, chưa có data, true khi đang fetch
-    isError, // true = fetch bị lõi
-    error, // trả về OB nếu có lỗi
-    refetch, // Func để re-fetch
-    isFetching, // true = đang fetch ( dù có hay không data )
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
   } = useUser();
   // console.log(user);
   const handleLogout = async () => {
@@ -87,21 +82,21 @@ const AdminMainLayout = () => {
     `${user?.user?.lastName || ""} ${user?.user?.firstName || ""}`.trim();
 
   return (
-    <div className="min-h-screen flex bg-gray-50 text-gray-800">
-      {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r h-screen sticky top-0">
-        <div className="h-16 flex items-center px-6 border-b">
-          <NavLink to="/admin" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-sm group-hover:bg-blue-700 transition-colors">
+    <div className="min-h-screen flex bg-gray-50/50 text-gray-900 font-sans">
+      {/* ── Sidebar (Tối giản & Sang trọng) ── */}
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 h-screen sticky top-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div className="h-20 flex items-center px-6 border-b border-gray-50/80">
+          <NavLink to="/admin" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gray-900 to-gray-600 flex items-center justify-center text-white text-sm font-black shadow-md group-hover:scale-105 transition-transform duration-300">
               V
             </div>
-            <span className="font-semibold text-[15px] tracking-tight text-slate-800">
+            <span className="font-extrabold text-[16px] tracking-tight text-gray-900">
               VNZ Company
             </span>
           </NavLink>
         </div>
 
-        <nav className="flex-1 px-2 py-4 space-y-1">
+        <nav className="flex-1 px-4 py-6 space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -110,57 +105,69 @@ const AdminMainLayout = () => {
                 key={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-100 ${
-                    isActive ? "bg-primary/10 font-medium text-primary" : ""
+                  `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out font-medium text-[14px] ${
+                    isActive
+                      ? "bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-md shadow-gray-900/10"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-900 hover:translate-x-1"
                   }`
                 }
               >
-                <Icon className="w-5 h-5 text-gray-600" />
+                <Icon
+                  className={`w-5 h-5 ${/* Ẩn bớt độ đậm của icon nếu không active */ ""}`}
+                />
                 <span>{item.label}</span>
               </NavLink>
             );
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-r">
+        {/* Thông tin User cuối Sidebar */}
+        <div className="p-4 border-t border-gray-100 bg-gray-50/30">
           {token ? (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between bg-white border border-gray-100 p-2 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
               <Link
                 to="/admin/profile"
-                className="flex items-center gap-3 hover:bg-slate-100 p-2 -ml-2 rounded-lg transition-colors cursor-pointer w-full overflow-hidden"
+                className="flex items-center gap-3 hover:bg-gray-50 p-1.5 pr-2 rounded-xl transition-colors cursor-pointer w-full overflow-hidden"
               >
-                <div className="w-9 h-9 bg-primary/10 text-primary font-bold rounded-full flex items-center justify-center overflow-hidden shrink-0">
+                <div className="w-9 h-9 bg-gradient-to-tr from-gray-200 to-gray-100 text-gray-700 font-bold rounded-full flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
                   {isLoading ? "..." : renderAvatar()}
                 </div>
-                <div className="flex flex-col w-full overflow-hidden pr-2">
+                <div className="flex flex-col w-full overflow-hidden pr-1">
                   <div
-                    className="text-sm font-medium truncate"
+                    className="text-sm font-bold text-gray-800 truncate"
                     title={fullName}
                   >
                     {isLoading ? "Loading..." : fullName || "Admin"}
                   </div>
-                  <div className="text-xs text-gray-500 truncate">
+                  <div className="text-[11px] text-gray-400 font-medium truncate uppercase tracking-wider mt-0.5">
                     {user?.user?.position || user?.role}
                   </div>
                 </div>
               </Link>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 text-red-500" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="hover:bg-red-50 hover:text-red-600 rounded-xl mr-1"
+              >
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           ) : (
             <NavLink to="/login">
-              <Button className="w-full">Login</Button>
+              <Button className="w-full bg-gray-900 text-white hover:bg-black rounded-xl">
+                Login
+              </Button>
             </NavLink>
           )}
         </div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* Topbar */}
-        <header className="h-16 bg-white border-b flex items-center px-4 md:px-6">
+        {/* ── Topbar ── */}
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center px-4 md:px-8 sticky top-0 z-40">
           <div className="flex items-center gap-3 md:hidden">
-            <Button variant="ghost" className="p-2">
+            <Button variant="ghost" className="p-2 rounded-xl">
               <Menu className="w-5 h-5" />
             </Button>
             <Link to="/">
@@ -171,11 +178,11 @@ const AdminMainLayout = () => {
           </div>
 
           <div className="flex items-center gap-4 w-full">
-            <div className="hidden md:flex items-center bg-gray-100 rounded-md px-3 py-2 gap-2 w-1/3">
-              <Search className="w-4 h-4 text-gray-500" />
+            <div className="hidden md:flex items-center bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 gap-3 w-1/3 focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-300 transition-all">
+              <Search className="w-4 h-4 text-gray-400" />
               <input
-                placeholder="Search employees, news..."
-                className="bg-transparent outline-none text-sm w-full"
+                placeholder="Tìm kiếm nhân viên, tin tức..."
+                className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder:text-gray-400 font-medium"
               />
             </div>
 
@@ -194,39 +201,36 @@ const AdminMainLayout = () => {
                 <Bell className="w-5 h-5" />
               </Button>
 
-              {/* THÔNG TIN USER GÓC TRÊN TOPBAR */}
               {token ? (
-                <div className="flex items-center gap-3">
-                  <div className="hidden sm:block text-sm text-gray-800 font-medium">
-                    {isLoading ? "Loading..." : fullName || "Admin"}
+                <div className="flex items-center gap-4 border-l border-gray-200 pl-4">
+                  <div className="hidden sm:block text-sm text-gray-800 font-bold">
+                    {isLoading ? "..." : fullName || "Admin"}
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  >
-                    Logout
-                  </Button>
                 </div>
               ) : (
                 <NavLink to="/login">
-                  <Button variant="ghost">Login</Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-xl font-medium border-gray-200 hover:bg-gray-50"
+                  >
+                    Login
+                  </Button>
                 </NavLink>
               )}
             </div>
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-auto p-6 bg-slate-100">
+        {/* ── Content ── */}
+        <main className="flex-1 overflow-auto p-6 md:p-8">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>
 
-        <footer className="bg-white border-t p-4 text-sm text-center text-gray-500">
-          <div className="justify-center flex items-center gap-2 text-[13px] text-slate-400">
-            <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">
+        <footer className="bg-transparent py-4 text-center">
+          <div className="justify-center flex items-center gap-2 text-[12px] font-medium text-gray-400">
+            <div className="w-4 h-4 rounded-md bg-gradient-to-br from-gray-500 to-gray-400 flex items-center justify-center text-white text-[9px] font-bold">
               V
             </div>
             <span>© 2026 VNZ Company. All rights reserved.</span>

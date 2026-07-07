@@ -36,6 +36,13 @@ import { DepartmentCreatePage } from "@/features/departments/pages/DepartmentCre
 import { DepartmentEditPage } from "@/features/departments/pages/DepartmentEditPage";
 import { DepartmentDetailPage } from "@/features/departments/pages/DepartmentDetailPage";
 import ProfilePage from "@/features/account/pages/ProfilePage";
+import ApplicantDashboardPage from "@/features/applicant/pages/ApplicantDashboardPage";
+import ApplicantApplicationDetailPage from "@/features/applicant/pages/ApplicantApplicationDetailPage";
+import ApplicationListPage from "@/features/applications/pages/ApplicationListPage";
+import ApplicationDetailPage from "@/features/applications/pages/ApplicationDetailPage";
+import ApplicantProfilePage from "@/features/applicant/pages/ApplicantProfilePage";
+import MyLeaveListPage from "@/features/account/pages/MyLeavePage";
+import MyLeaveDetailPage from "@/features/account/pages/MyLeaveDetailPage";
 
 // ─── Shifts & WorkSchedules ────────────────────────────────────────────────
 import {
@@ -81,6 +88,10 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminDashboardPage /> },
 
           { path: "profile", element: <ProfilePage /> },
+
+          //application
+          { path: "applications", element: <ApplicationListPage /> },
+          { path: "applications/:id", element: <ApplicationDetailPage /> },
 
           // Employees
           { path: "accounts", element: <AccountListPage /> },
@@ -137,6 +148,24 @@ export const router = createBrowserRouter([
   },
 
   {
+    path: "/applicant",
+    element: <RequireAuth allowedRoles={["Applicant"]} />,
+    children: [
+      {
+        element: <MainLayout />, // Dùng lại MainLayout để có header/footer giống trang chủ
+        children: [
+          { path: "applications", element: <ApplicantDashboardPage /> },
+          {
+            path: "applications/:id",
+            element: <ApplicantApplicationDetailPage />,
+          },
+          { path: "profile", element: <ApplicantProfilePage /> },
+        ],
+      },
+    ],
+  },
+
+  {
     path: "/employee",
     element: <RequireAuth allowedRoles={["Employee"]} />,
     children: [
@@ -146,6 +175,8 @@ export const router = createBrowserRouter([
           { index: true, element: <ProfilePage /> },
           { path: "profile", element: <ProfilePage /> },
           { path: "schedule", element: <MySchedulePage /> },
+          { path: "leaves", element: <MyLeaveListPage /> },
+          { path: "leaves/:id", element: <MyLeaveDetailPage /> },
         ],
       },
     ],

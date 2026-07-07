@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -28,12 +28,7 @@ const DeleteAccountDialog = ({ userId }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="destructive" className="flex items-center gap-2">
-          <Trash2 className="w-4 h-4" />
-          <span className="hidden sm:inline">Xoá tài khoản</span>
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild></DialogTrigger>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">

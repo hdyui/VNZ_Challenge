@@ -7,7 +7,7 @@ export type RecruitmentLevel =
   | "Middle"
   | "Senior";
 
-export type RecruitmentStatus = "Open" | "Draft" | "Closed";
+export type RecruitmentStatus = "Open" | "Draft" | "Closed" | "Archived";
 
 export type WorkingType =
   | "FullTime"
@@ -16,6 +16,14 @@ export type WorkingType =
   | "Hybrid"
   | "Freelance"
   | "Internship";
+
+export type RecruitmentApplyStatus =
+  | "Submitted"
+  | "Reviewed"
+  | "InterviewScheduled"
+  | "Approved"
+  | "Rejected"
+  | "Cancelled";
 
 export interface Department {
   id: string;
@@ -35,6 +43,7 @@ export interface PublicRecruitmentItem {
   hiringQuantity?: number | null;
   deadline?: string | null; // ISO datetime
   createdAt: string;
+  viewCount: number;
 }
 
 export interface PublicRecruitmentDetail {
@@ -92,6 +101,29 @@ export interface RecruitmentApplicationPayload {
   fullName: string;
   email: string;
   phone: string;
-  coverLetter?: string;
-  cvUrl?: string;
+  address?: string;
+  cvFile: File;
+}
+
+export interface InterviewSession {
+  id?: string;
+  interviewSessionId: string;
+  recruitmentId?: string;
+  interviewDate: string;
+  startTime: string;
+  endTime: string;
+  address: string;
+  room: string;
+  maxCandidates?: number;
+  message?: string;
+}
+
+export interface ScheduleInterviewPayload {
+  interviewDate: string;
+  startTime: string;
+  endTime: string;
+  address: string;
+  room: string;
+  maxCandidates: number;
+  message: string;
 }

@@ -26,6 +26,9 @@ const RequireAuth = ({ allowedRoles }: RequireAuthProps) => {
     console.log("[RequireAuth] Role không được phép:", role, "- redirect");
     if (role === "Admin") return <Navigate to="/admin" replace />;
     if (role === "Employee") return <Navigate to="/employee" replace />;
+    if (role === "Applicant")
+      return <Navigate to="/applicant/applications" replace />;
+
     return <Navigate to="/" replace />;
   }
 
