@@ -388,7 +388,7 @@ const RecruitmentPage = () => {
 
         {!isLoading && recruitments.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-3">
-            <p className="text-xs text-slate-500 font-mono tabular-nums">
+            <p className="text-xs text-slate-500 tabular-nums">
               Hiển thị{" "}
               <span className="font-semibold text-slate-900">
                 {recruitments.length}
