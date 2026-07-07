@@ -116,15 +116,10 @@ export const useLogoutMutation = () => {
       queryClient.removeQueries();
       console.log(error.response?.data?.message);
     },
-
-    onSettled: () => {
-      //có thể dùng để reset form hoặc các thao tác cleanup khác
-    },
   });
 };
 
 export const useUser = () => {
-  // Dùng để đọc/lấy dữ liệu (GET) từ server.
   return useQuery({
     queryKey: ["me"], // id của cache
 

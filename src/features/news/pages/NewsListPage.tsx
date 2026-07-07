@@ -55,7 +55,7 @@ export const NewsListPage = () => {
 
   const { data, isLoading } = useNewsList({
     page,
-    limit: LIMIT,
+    pageSize: LIMIT,
     search: debouncedSearch || undefined,
     status: status === "all" ? undefined : status,
     sortBy: "createdAt",
@@ -79,9 +79,6 @@ export const NewsListPage = () => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
-    }
-    if (page !== 1) {
-      resetToFirstPage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
@@ -168,7 +165,9 @@ export const NewsListPage = () => {
             size="icon"
             variant="ghost"
             className="h-8 text-xs text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
-            onClick={() => navigate(`/admin/news/${item.id}`)}
+            onClick={() => {
+              handleDelete(item.id);
+            }}
           >
             <Trash2 className="h-4 w-4" />
           </Button>

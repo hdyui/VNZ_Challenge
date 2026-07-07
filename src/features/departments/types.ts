@@ -1,6 +1,3 @@
-// src/features/departments/type.ts
-
-// 1. Cấu trúc 1 item trong danh sách phòng ban
 export interface DepartmentListItem {
   id: string;
   name: string;
@@ -11,7 +8,6 @@ export interface DepartmentListItem {
   createdAt: string;
 }
 
-// 2. Cấu trúc 1 User nằm trong phòng ban
 export interface DepartmentMember {
   userId: string;
   firstName: string;
@@ -20,7 +16,6 @@ export interface DepartmentMember {
   joinedAt: string;
 }
 
-// 1. Cấu trúc 1 item trong danh sách phòng ban
 export interface DepartmentListItem {
   id: string;
   name: string;
@@ -31,7 +26,6 @@ export interface DepartmentListItem {
   createdAt: string;
 }
 
-// 2. Cấu trúc 1 User nằm trong phòng ban (Đã thêm)
 export interface DepartmentMember {
   userId: string;
   firstName: string;
@@ -40,7 +34,6 @@ export interface DepartmentMember {
   joinedAt: string;
 }
 
-// 3. Cấu trúc Chi tiết phòng ban (Có mảng members)
 export interface DepartmentDetail {
   id: string;
   name: string;

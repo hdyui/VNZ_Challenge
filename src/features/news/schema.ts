@@ -4,26 +4,19 @@ import { z } from "zod";
 export const NewsFormSchema = z.object({
   title: z
     .string()
-    .min(1, { message: "Tiêu đề là bắt buộc" })
-    .min(5, { message: "Tiêu đề phải có ít nhất 5 ký tự" })
-    .max(255, { message: "Tiêu đề không được quá 255 ký tự" }),
-
-  // Ảnh bìa: File khi người dùng chọn ảnh mới, hoặc string (URL) khi giữ ảnh cũ lúc edit
-  coverImg: z.union(
-    [
-      z.instanceof(File, { message: "Ảnh bìa là bắt buộc" }),
-      z.string().min(1).url({ message: "URL ảnh bìa không hợp lệ" }),
-    ],
-    { error: "Ảnh bìa là bắt buộc" },
-  ),
-
-  contentHtml: z.string().min(1, { message: "Nội dung bài viết là bắt buộc" }),
-
+    .min(1, "Vui lòng nhập tiêu đề")
+    .max(255, "Tiêu đề tối đa 255 ký tự"),
+  coverImg: z.string().min(1, "Vui lòng chọn ảnh bìa"),
+  contentHtml: z
+    .string()
+    .min(1, "Vui lòng nhập nội dung bài viết")
+    .refine((val) => val.replace(/<[^>]*>/g, "").trim().length > 0, {
+      message: "Vui lòng nhập nội dung bài viết",
+    }),
+  // Delta JSON của Quill — dùng để khôi phục lại editor khi edit mà không
+  // mất định dạng phức tạp (nếu BE không cần lưu, có thể bỏ field này).
   contentJson: z.any().optional(),
-
-  status: z.enum(["draft", "published", "archived"], {
-    error: "Trạng thái là bắt buộc",
-  }),
+  status: z.enum(["draft", "published", "archived"]),
 });
 
 export type NewsFormSchemaType = z.infer<typeof NewsFormSchema>;

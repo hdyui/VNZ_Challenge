@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Loader2,
   RefreshCw,
+  Home,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -22,13 +23,13 @@ import { useDashboard } from "../hooks/useDashboard";
 import { StatCard } from "../components/StatCard";
 import { RecentNewsList } from "../components/RecentNewsList";
 
-// ─── Skeleton card ────────────────────────────────────────────────────────────
+// ─── Skeleton card (Tối giản hóa) ─────────────────────────────────────────────
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4 animate-pulse">
-    <div className="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0" />
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 animate-pulse">
+    <div className="w-12 h-12 rounded-xl bg-slate-100 flex-shrink-0" />
     <div className="space-y-2 flex-1">
-      <div className="h-3 bg-gray-100 rounded w-1/2" />
-      <div className="h-6 bg-gray-100 rounded w-1/3" />
+      <div className="h-3 bg-slate-100 rounded w-1/2" />
+      <div className="h-5 bg-slate-100 rounded w-1/3" />
     </div>
   </div>
 );
@@ -40,7 +41,6 @@ export const AdminDashboardPage = () => {
   const stats = data?.stats;
   const recentNews = data?.recentNews ?? [];
 
-  // Lấy ngày hôm nay để hiển thị greeting
   const hour = new Date().getHours();
   const greeting =
     hour < 12
@@ -50,13 +50,15 @@ export const AdminDashboardPage = () => {
         : "Chào buổi tối";
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-100 pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{greeting}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Đây là tổng quan hệ thống hôm nay —{" "}
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-900 to-gray-500 bg-clip-text text-transparent tracking-tight">
+            {greeting}
+          </h1>
+          <p className="text-sm text-gray-500 mt-2 font-medium">
+            Tổng quan hệ thống —{" "}
             {new Date().toLocaleDateString("vi-VN", {
               weekday: "long",
               day: "2-digit",
@@ -65,29 +67,41 @@ export const AdminDashboardPage = () => {
             })}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="self-start sm:self-auto text-gray-600 gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {isFetching ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
-          {isFetching ? "Đang làm mới..." : "Làm mới"}
-        </Button>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <Link to="/">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-black transition-all shadow-sm"
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Về Public</span>
+            </Button>
+          </Link>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="gap-2 bg-slate-900 hover:bg-black text-white shadow-md hover:shadow-lg transition-all disabled:opacity-70"
+          >
+            {isFetching ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+            {isFetching ? "Đang tải..." : "Làm mới"}
+          </Button>
+        </div>
       </div>
 
-      {/* ── Stat Cards ──────────────────────────────────────────────────────── */}
+      {/* ── Stat Cards (Phong cách Đơn sắc - Monochrome) ─────────────────────── */}
       {isError ? (
-        <div className="rounded-xl border border-red-100 bg-red-50 p-6 text-center text-sm text-red-500">
-          Không thể tải dữ liệu. Vui lòng thử lại.
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-600 font-medium shadow-sm">
+          Không thể tải dữ liệu. Vui lòng thử lại sau.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
           ) : (
@@ -96,135 +110,157 @@ export const AdminDashboardPage = () => {
                 label="Tổng bài viết"
                 value={stats?.totalNews ?? 0}
                 icon={Newspaper}
-                iconBg="bg-blue-50"
-                iconColor="text-blue-500"
+                iconBg="bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-100"
+                iconColor="text-gray-700"
                 sub={`${stats?.publishedNews ?? 0} đã xuất bản`}
-                subColor="text-blue-400"
+                subColor="text-gray-400"
               />
               <StatCard
                 label="Bài viết nháp"
                 value={stats?.draftNews ?? 0}
                 icon={FilePen}
-                iconBg="bg-amber-50"
-                iconColor="text-amber-500"
+                iconBg="bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-100"
+                iconColor="text-gray-700"
                 sub="Chưa xuất bản"
-                subColor="text-amber-400"
+                subColor="text-gray-400"
               />
               <StatCard
                 label="Đã xuất bản"
                 value={stats?.publishedNews ?? 0}
                 icon={CheckCircle2}
-                iconBg="bg-green-50"
-                iconColor="text-green-500"
+                iconBg="bg-gradient-to-br from-gray-900 to-gray-700 shadow-sm"
+                iconColor="text-white" // Tạo điểm nhấn nhẹ nhàng bằng màu đối lập
                 sub="Bài viết công khai"
-                subColor="text-green-400"
+                subColor="text-gray-500"
               />
               <StatCard
-                label="Nhân viên"
+                label="Nhân sự"
                 value={stats?.totalEmployees ?? "0"}
                 icon={Users}
-                iconBg="bg-purple-50"
-                iconColor="text-green-500"
-                sub="Nhân viên"
-                subColor="text-pink-400"
+                iconBg="bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-100"
+                iconColor="text-gray-700"
+                sub="Tổng nhân viên"
+                subColor="text-gray-400"
               />
               <StatCard
-                label="Tuyển dụng"
+                label="Tin tuyển dụng"
                 value={stats?.totalRecruitments ?? "0"}
                 icon={Briefcase}
-                iconBg="bg-indigo-50"
-                iconColor="text-purple-500"
-                sub="Bài viết tuyển dụng"
-                subColor="text-green-400"
+                iconBg="bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-100"
+                iconColor="text-gray-700"
+                sub="Tổng chiến dịch"
+                subColor="text-gray-400"
               />
               <StatCard
                 label="Đang tuyển"
                 value={stats?.activeRecruitments ?? "0"}
                 icon={TrendingUp}
-                iconBg="bg-rose-50"
-                iconColor="text-green-500"
-                sub="Đã mở"
-                subColor="text-red-400"
+                iconBg="bg-gradient-to-br from-gray-900 to-gray-700 shadow-sm"
+                iconColor="text-white" // Điểm nhấn
+                sub="Đang mở"
+                subColor="text-gray-500"
               />
             </>
           )}
         </div>
       )}
 
-      {/* ── Recent News ─────────────────────────────────────────────────────── */}
-      <Card className="shadow-sm border-gray-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base font-semibold text-gray-800">
+      {/* ── Thao tác nhanh (Hiệu ứng Nhảy & Gradient) ───────────────────────── */}
+      <div>
+        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+          Thao tác nhanh
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Link to="/admin/news/create" className="block outline-none group">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:-translate-y-1.5 hover:shadow-xl hover:border-gray-300 transition-all duration-300 ease-out cursor-pointer">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center group-hover:from-black group-hover:to-gray-800 transition-colors shadow-md">
+                <FilePen className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="block text-base font-bold text-gray-800 group-hover:text-black transition-colors">
+                  Viết bài mới
+                </span>
+                <span className="text-xs text-gray-400 font-medium">
+                  Tạo tin tức nội bộ
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/admin/news" className="block outline-none group">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:-translate-y-1.5 hover:shadow-xl hover:border-gray-300 transition-all duration-300 ease-out cursor-pointer">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center group-hover:from-black group-hover:to-gray-800 transition-colors shadow-md">
+                <Newspaper className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="block text-base font-bold text-gray-800 group-hover:text-black transition-colors">
+                  Quản lý tin tức
+                </span>
+                <span className="text-xs text-gray-400 font-medium">
+                  Chỉnh sửa & xuất bản
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/admin/accounts" className="block outline-none group">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:-translate-y-1.5 hover:shadow-xl hover:border-gray-300 transition-all duration-300 ease-out cursor-pointer">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center group-hover:from-black group-hover:to-gray-800 transition-colors shadow-md">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="block text-base font-bold text-gray-800 group-hover:text-black transition-colors">
+                  Nhân sự
+                </span>
+                <span className="text-xs text-gray-400 font-medium">
+                  Quản lý tài khoản
+                </span>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Recent News (Thiết kế lại card) ─────────────────────────────────── */}
+      <Card className="shadow-sm border-gray-100 rounded-2xl overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between pb-4 bg-gray-50/50 border-b border-gray-100">
+          <CardTitle className="text-base font-bold text-gray-800">
             Bài viết mới nhất
           </CardTitle>
           <Link to="/admin/news">
             <Button
               variant="ghost"
               size="sm"
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 text-xs"
+              className="text-gray-500 hover:text-black hover:bg-gray-100 gap-1 text-xs font-medium transition-colors"
             >
               Xem tất cả <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-2">
           {isLoading ? (
-            <ul className="divide-y divide-gray-100 animate-pulse">
+            <div className="flex flex-col gap-2 pt-2 animate-pulse">
               {Array.from({ length: 4 }).map((_, i) => (
-                <li key={i} className="flex items-center gap-4 py-3">
-                  <div className="w-14 h-10 rounded-md bg-gray-100 flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 bg-gray-100 rounded w-3/4" />
-                    <div className="h-2.5 bg-gray-100 rounded w-1/3" />
+                <div
+                  key={i}
+                  className="flex items-center gap-4 p-3 rounded-2xl"
+                >
+                  {/* Cục xám thay cho Ảnh */}
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-xl bg-gray-100 flex-shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    {/* Cục xám thay cho Tiêu đề */}
+                    <div className="h-4 bg-gray-100 rounded-md w-3/4" />
+                    {/* Cục xám thay cho Ngày tháng */}
+                    <div className="h-3 bg-gray-100 rounded-md w-1/3" />
                   </div>
-                  <div className="w-16 h-5 bg-gray-100 rounded-full flex-shrink-0" />
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <RecentNewsList items={recentNews} />
           )}
         </CardContent>
       </Card>
-
-      {/* ── Quick Actions ───────────────────────────────────────────────────── */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Thao tác nhanh
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <Link to="/admin/news/create">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group">
-              <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <FilePen className="w-4 h-4 text-blue-500" />
-              </div>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                Viết bài mới
-              </span>
-            </div>
-          </Link>
-          <Link to="/admin/news">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group">
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
-                <Newspaper className="w-4 h-4 text-indigo-500" />
-              </div>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
-                Quản lý tin tức
-              </span>
-            </div>
-          </Link>
-          <Link to="/admin/accounts">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group">
-              <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                <Users className="w-4 h-4 text-purple-500" />
-              </div>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-purple-600 transition-colors">
-                Nhân viên
-              </span>
-            </div>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 };

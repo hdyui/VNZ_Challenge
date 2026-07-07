@@ -110,12 +110,7 @@ export const DepartmentListPage = () => {
         <span className="font-medium text-gray-900">{item.name}</span>
       ),
     },
-    {
-      header: "Số lượng NV",
-      cell: (item) => (
-        <span className="text-gray-600">{item.memberCount ?? 0}</span>
-      ),
-    },
+
     {
       header: "Trạng thái",
       cell: (item) => <DepartmentStatusBadge isActive={item.isActive} />,

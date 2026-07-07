@@ -20,19 +20,9 @@ export interface JwtPayload {
   email: string;
   Role: UserRole;
 }
-// Bản đồ map với bảng User (Thông tin cá nhân)
-// export interface UserProfile {
-//   id: string; // UserId
-//   email: string;
-//   departmentId?: string | null;
-//   firstName: string;
-//   lastName: string;
-//   phone?: string | null;
-//   position?: string | null;
-//   avatarUrl?: string | null;
-// }
+
 export interface ChangePasswordRequest {
-  currentPassword: string; // Trong docs của BE là currentPassword nhé bác
+  currentPassword: string;
   newPassword: string;
   confirmPassword: string;
 }
@@ -42,7 +32,7 @@ export interface UserDto {
   password: string;
 }
 
-// Interface cho kết quả trả về của GET /api/v1/auth/me
+// Interface của GET /api/v1/auth/me
 export interface CurrentUserResponse {
   accountId: string;
   email: string;
@@ -51,7 +41,7 @@ export interface CurrentUserResponse {
   user: UserProfileDetail;
 }
 
-// Interface chi tiết cho cục "user" bên trong
+// Interface chi tiết cho "user" bên trong
 export interface UserProfileDetail {
   id: string;
   firstName: string;

@@ -7,7 +7,6 @@ interface Props {
   role?: string;
   fullName: string;
   triggerUpload: (target: UploadTarget) => void;
-  /** Cụm nút hành động (Cập nhật / Đổi mật khẩu / Xoá...) render ở góc phải */
   actions?: ReactNode;
 }
 
@@ -35,7 +34,7 @@ const ProfileHeader = ({
 
   return (
     <>
-      {/* 1. ẢNH BÌA (COVER) */}
+      {/* 1. ẢNH BÌA */}
       <div className="h-64 sm:h-80 w-full relative group">
         {userInfo?.coverImg ? (
           <img
@@ -126,7 +125,7 @@ const ProfileHeader = ({
         </div>
       </div>
 
-      {/* 3. KHU TÊN + ACTIONS + QUOTE */}
+      {/* 3. TÊN + ACTIONS + QUOTE */}
       <div
         className="pt-20 pb-2 px-8 sm:px-12 relative"
         onClick={() => setActiveMenu(null)}

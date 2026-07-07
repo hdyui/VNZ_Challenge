@@ -22,7 +22,6 @@ import {
 } from "../hooks/useDepartment";
 import { DepartmentStatusBadge } from "../components/DepartmentStatusBadge";
 import { Loader2, UserPlus, Trash2 } from "lucide-react";
-// Import thêm useQuery và apiClient để gọi API lấy danh sách user
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/lib/axios";
 import type { DepartmentMember } from "../types";
@@ -30,7 +29,6 @@ import type { DepartmentMember } from "../types";
 export const DepartmentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
 
-  // State lưu ID của nhân viên được chọn trong dropdown
   const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   const { data, isLoading, isError } = useDepartmentDetail(id!);
@@ -43,15 +41,13 @@ export const DepartmentDetailPage = () => {
     variables: removingUserId,
   } = useRemoveUserFromDepartment(id!);
 
-  // --- HOOK LẤY DANH SÁCH TẤT CẢ TÀI KHOẢN ---
   // (Lưu ý: Nếu backend của bạn dùng endpoint khác như /accounts thì đổi chữ /users thành /accounts nhé)
-  // --- HOOK LẤY DANH SÁCH TẤT CẢ TÀI KHOẢN ---
   const { data: usersData, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["all-users"],
     queryFn: () =>
       apiClient
         .get("/users", {
-          params: { pageSize: 99 }, // Ép lấy 1000 user để nhét hết vào Dropdown
+          params: { pageSize: 99 },
         })
         .then((res: any) => res.value?.items || []),
   });
@@ -200,7 +196,7 @@ export const DepartmentDetailPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            {/* ĐÂY LÀ GIAO DIỆN SELECT CHỌN NHÂN VIÊN MỚI */}
+            {/* GIAO DIỆN SELECT CHỌN NHÂN VIÊN MỚI */}
             <form onSubmit={handleAddUser} className="flex gap-3 mb-6">
               <div className="w-full max-w-sm">
                 <Select

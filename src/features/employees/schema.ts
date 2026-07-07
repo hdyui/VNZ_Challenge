@@ -26,14 +26,12 @@ export const ChangePasswordSchema = z
   });
 export type ChangePasswordTypes = z.infer<typeof ChangePasswordSchema>;
 
-// 1. Schema cho Form Tạo Tài Khoản (Bao gồm cả thông tin User)
 export const CreateAccountSchema = z.object({
   email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
   password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   role: z.enum(["Admin", "Employee"]),
   status: z.enum(["Active", "Inactive"]),
 
-  // Thông tin User đi kèm
   firstName: z.string().min(1, "Vui lòng nhập tên"),
   lastName: z.string().min(1, "Vui lòng nhập họ"),
   position: z.string().min(1, "Vui lòng nhập chức vụ"),
@@ -42,23 +40,26 @@ export const CreateAccountSchema = z.object({
   hobby: z.string().optional(),
   quote: z.string().optional(),
 
-  // File ảnh (Lưu ở dạng mảng file từ thẻ input type="file")
   avatarImg: z.any().optional(),
   coverImg: z.any().optional(),
 });
 
 export type CreateAccountFormValues = z.infer<typeof CreateAccountSchema>;
 
-// 2. Schema cho Form Cập Nhật (Chỉ update Email, Role, Status)
+// Sửa lại đoạn code của bác thành như thế này:
 export const UpdateAccountSchema = z.object({
-  email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
-  role: z.enum(["Admin", "Employee"]),
-  status: z.enum(["Active", "Inactive"]),
-});
+  // THÊM DÒNG NÀY VÀO ĐỂ HẾT LỖI:
+  email: z.string().email({ message: "Email không hợp lệ" }),
 
+  role: z.enum(["Admin", "Employee", "Applicant"], {
+    message: "Vui lòng chọn vai trò",
+  }),
+  status: z.enum(["Active", "Inactive"], {
+    message: "Vui lòng chọn trạng thái",
+  }),
+});
 export type UpdateAccountFormValues = z.infer<typeof UpdateAccountSchema>;
 
-// 3. Schema cho Form Reset Mật Khẩu
 export const ResetPasswordSchema = z
   .object({
     newPassword: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),

@@ -1,4 +1,4 @@
-// Dùng cho cả GET /users/{userId} và kết quả trả về của GET /auth/me (phần user)
+// Dùng cho cả GET /users/{userId} | GET /auth/me (phần user)
 export interface UserProfile {
   id: string;
   firstName: string;
@@ -12,7 +12,7 @@ export interface UserProfile {
   avatarImg: string | null;
   coverImg: string | null;
   account: AccountDetail[];
-  departments?: DepartmentBrief[]; // Lấy từ API detail user
+  departments?: DepartmentBrief[];
 }
 
 export interface DepartmentBrief {
@@ -54,7 +54,7 @@ export interface UpdateProfileRequest {
 
 // src/features/accounts/type.ts
 
-export type AccountRole = "Admin" | "Employee";
+export type AccountRole = "Admin" | "Employee" | "Applicant";
 export type AccountStatus = "Active" | "Inactive";
 
 // Thông tin user rút gọn trả về trong list
@@ -71,7 +71,7 @@ export interface AccountListItem {
   email: string;
   role: AccountRole;
   status: AccountStatus;
-  user: UserShort;
+  user: UserShort | null;
   createdAt: string;
   updatedAt: string | null;
 }

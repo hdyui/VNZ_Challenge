@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { usePublicRecruitmentList } from "../hooks/useRecruitment";
+import {
+  usePublicRecruitmentList,
+  useGetRecruitmentViews,
+} from "../hooks/useRecruitment";
 import type { PublicRecruitmentQueryParams, RecruitmentLevel } from "../type";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { Input } from "@/shared/components/ui/input";
@@ -21,10 +24,9 @@ import {
   CalendarDays,
   ArrowRight,
   X,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const DEFAULT_LIMIT = 9;
 
@@ -46,8 +48,6 @@ const LEVEL_COLOR: Record<RecruitmentLevel, string> = {
   Senior: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-// ─── Skeleton card ────────────────────────────────────────────────────────────
-
 const RecruitmentCardSkeleton = () => (
   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
     <div className="flex items-start justify-between gap-4">
@@ -62,13 +62,12 @@ const RecruitmentCardSkeleton = () => (
   </div>
 );
 
-// ─── Recruitment card ─────────────────────────────────────────────────────────
-
 interface RecruitmentCardProps {
   title: string;
   departmentName: string;
   level: RecruitmentLevel;
   createdAt: string;
+  viewCount?: number;
   onClick: () => void;
 }
 
@@ -77,16 +76,14 @@ const RecruitmentCard = ({
   departmentName,
   level,
   createdAt,
+  viewCount = 0,
   onClick,
 }: RecruitmentCardProps) => (
   <article
     onClick={onClick}
     className="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg space-y-4"
   >
-    {/* Accent bar */}
     <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-300 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-
-    {/* Title + level badge */}
     <div className="flex items-start justify-between gap-3">
       <h2 className="text-base font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors leading-snug line-clamp-2">
         {title}
@@ -97,8 +94,6 @@ const RecruitmentCard = ({
         {level}
       </span>
     </div>
-
-    {/* Meta */}
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-500">
       <span className="flex items-center gap-1.5">
         <Building2 className="h-3.5 w-3.5 text-gray-400" />
@@ -108,9 +103,11 @@ const RecruitmentCard = ({
         <CalendarDays className="h-3.5 w-3.5 text-gray-400" />
         {format(new Date(createdAt), "dd/MM/yyyy")}
       </span>
+      <span className="flex items-center gap-1.5 text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md font-medium ml-auto">
+        <Eye className="h-3.5 w-3.5" />
+        {viewCount}
+      </span>
     </div>
-
-    {/* CTA */}
     <div className="pt-1">
       <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
         Xem chi tiết
@@ -119,8 +116,6 @@ const RecruitmentCard = ({
     </div>
   </article>
 );
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const parseLevel = (value: string | null): RecruitmentLevel | "all" => {
   const valid = LEVEL_OPTIONS.map((o) => o.value);
@@ -140,7 +135,6 @@ const PublicRecruitmentPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── State derived from URL (source of truth) ────────────────────────────────
   const page = parsePage(searchParams.get("page"));
   const level = parseLevel(searchParams.get("level"));
   const search = searchParams.get("search") ?? "";
@@ -152,19 +146,52 @@ const PublicRecruitmentPage = () => {
     level,
   };
 
+  // HOOK ĐÚNG CHO TRANG DANH SÁCH
   const { data, isLoading } = usePublicRecruitmentList(params);
+  const { data: viewsData } = useGetRecruitmentViews();
+
+  const getViewCount = (id: string) => {
+    // 1. Nếu chưa có data thì mặc định là 0
+    if (!viewsData?.value) return 0;
+
+    const val = viewsData.value;
+
+    // 2. Nếu Backend trả về Array chuẩn: [ { id: "123", viewCount: 5 }, ... ]
+    if (Array.isArray(val)) {
+      const viewItem = val.find(
+        (v: any) => v.id === id || v.recruitmentId === id,
+      );
+      return viewItem?.viewCount ?? viewItem?.views ?? viewItem?.count ?? 0;
+    }
+
+    // 3. Nếu Backend trả về Object
+    if (typeof val === "object" && val !== null) {
+      // Trường hợp 3a: Bọc trong mảng items -> { items: [ { id: "123", viewCount: 5 } ] }
+      if (Array.isArray((val as any).items)) {
+        const viewItem = (val as any).items.find(
+          (v: any) => v.id === id || v.recruitmentId === id,
+        );
+        return viewItem?.viewCount ?? viewItem?.views ?? viewItem?.count ?? 0;
+      }
+
+      // Trường hợp 3b: Map key-value trực tiếp -> { "id-cua-bai-viet": 15 }
+      if (typeof (val as any)[id] === "number") {
+        return (val as any)[id];
+      }
+    }
+
+    return 0; // Trả về 0 nếu không match được trường hợp nào
+  };
 
   const recruitments = data?.value?.items ?? [];
   const total = data?.value?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / DEFAULT_LIMIT));
 
-  // ── Search input with live debounce, synced back to the URL ────────────────
   const [searchInput, setSearchInput] = useState(search);
   const debouncedSearch = useDebounce(searchInput.trim(), 400);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Keep input in sync if user navigates back/forward with browser buttons
     setSearchInput(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
@@ -176,7 +203,7 @@ const PublicRecruitmentPage = () => {
     }
     setSearchParams(
       (prev) => {
-        const next = new URLSearchParams(prev);
+        const next = newSearchParams(prev);
         if (debouncedSearch) next.set("search", debouncedSearch);
         else next.delete("search");
         next.set("page", "1");
@@ -189,7 +216,7 @@ const PublicRecruitmentPage = () => {
 
   const handleLevelChange = (value: string) => {
     setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
+      const next = newSearchParams(prev);
       if (value === "all") next.delete("level");
       else next.set("level", value);
       next.set("page", "1");
@@ -200,7 +227,7 @@ const PublicRecruitmentPage = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
+      const next = newSearchParams(prev);
       next.set("page", String(newPage));
       return next;
     });
@@ -214,14 +241,16 @@ const PublicRecruitmentPage = () => {
 
   const hasActiveFilters = !!search || level !== "all";
 
+  // Fix quick URL params creation
+  const newSearchParams = (prev: URLSearchParams) => new URLSearchParams(prev);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/60 via-white to-white">
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <section className="border-b border-gray-100 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 py-14 text-center space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5 text-xs font-medium text-indigo-700">
-            <BriefcaseBusiness className="h-3.5 w-3.5" />
-            Chúng tôi đang tuyển dụng!
+            <BriefcaseBusiness className="h-3.5 w-3.5" /> Chúng tôi đang tuyển
+            dụng!
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             Gia nhập đội ngũ của chúng tôi
@@ -231,7 +260,6 @@ const PublicRecruitmentPage = () => {
             với kỹ năng của bạn và cùng chúng tôi phát triển.
           </p>
 
-          {/* Search bar */}
           <div className="mx-auto mt-6 max-w-lg">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -246,7 +274,6 @@ const PublicRecruitmentPage = () => {
                   type="button"
                   onClick={() => setSearchInput("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label="Xóa tìm kiếm"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -256,9 +283,7 @@ const PublicRecruitmentPage = () => {
         </div>
       </section>
 
-      {/* ── Content ──────────────────────────────────────────────────────────── */}
       <main className="mx-auto max-w-5xl px-4 py-10 space-y-8">
-        {/* Filters + count row */}
         <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-500">
             {isLoading ? (
@@ -298,14 +323,12 @@ const PublicRecruitmentPage = () => {
                 onClick={handleClearFilters}
                 className="gap-1.5 text-gray-500 hover:text-gray-800"
               >
-                <X className="h-3.5 w-3.5" />
-                Xóa lọc
+                <X className="h-3.5 w-3.5" /> Xóa lọc
               </Button>
             )}
           </div>
         </div>
 
-        {/* Cards grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -343,13 +366,13 @@ const PublicRecruitmentPage = () => {
                 departmentName={item.department.name}
                 level={item.level}
                 createdAt={item.createdAt}
+                viewCount={getViewCount(item.id)} // Lấy view chuẩn
                 onClick={() => navigate(`/recruitments/${item.id}`)}
               />
             ))}
           </div>
         )}
 
-        {/* Pagination — always visible */}
         {!isLoading && (
           <div className="flex items-center justify-center space-x-2 pt-4">
             <Button
@@ -360,11 +383,9 @@ const PublicRecruitmentPage = () => {
             >
               Trước
             </Button>
-
             <span className="text-sm font-medium px-4">
               Trang {page} / {totalPages}
             </span>
-
             <Button
               variant="outline"
               onClick={() => handlePageChange(page + 1)}

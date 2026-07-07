@@ -1,5 +1,5 @@
 // src/shared/layouts/MainLayout.tsx
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
 import {
@@ -16,7 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
-import { Layout, LayoutDashboard, Menu, UserCircle } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/store";
 
@@ -42,6 +42,13 @@ const MainLayout = () => {
 
   const isAuthed = useAuthStore((state) => !!state.accessToken);
   const role = useAuthStore((state) => state.role);
+  const logout = useAuthStore((state) => state.clearAuth);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
   const getAuthButtonProps = () => {
     if (!isAuthed) {
       return {
@@ -50,6 +57,7 @@ const MainLayout = () => {
         icon: <UserCircle className="w-4 h-4 mr-2" />,
       };
     }
+
     if (role === "Admin") {
       return {
         to: "/admin",
@@ -57,9 +65,20 @@ const MainLayout = () => {
         icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
       };
     }
+
+    // ─── THÊM NHÁNH CHO APPLICANT Ở ĐÂY ───
+    if (role === "Applicant") {
+      return {
+        to: "/applicant/applications",
+        label: "Hồ sơ của tôi",
+        icon: <UserCircle className="w-4 h-4 mr-2" />,
+      };
+    }
+
+    // Mặc định cho Employee
     return {
       to: "/employee",
-      label: "Hồ sơ của tôi",
+      label: "Hồ sơ của tôi", // Hoặc Đổi thành "Trang nhân viên" tùy bác
       icon: <UserCircle className="w-4 h-4 mr-2" />,
     };
   };
@@ -104,6 +123,19 @@ const MainLayout = () => {
                 {authBtn.icon} {authBtn.label}
               </Link>
             </Button>
+
+            {/* --- NÚT ĐĂNG XUẤT (Desktop) --- */}
+            {isAuthed && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-slate-600 hover:text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Đăng xuất</span>
+              </Button>
+            )}
 
             {/* Mobile hamburger */}
             <Sheet>

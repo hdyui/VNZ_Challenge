@@ -19,19 +19,16 @@ export const LoginPage = () => {
   const loginMutation = useLoginMutation();
   const {
     register, // dùng để đăng ký các input vào form
-    handleSubmit, // dùng để xử lý submit form, nó sẽ tự động gọi validate và trả về data đã được validate nếu hợp lệ
+    handleSubmit, // dùng để xử lý submit form, tự động gọi validate và trả về data đã được validate nếu hợp lệ
     formState: { errors },
   } = useForm<LoginSchemaType>({
     //mode: khi nao validate?
     mode: "onTouched",
-    // - onSubmit: chỉ validate khi submit form
-    // - onChange: validate ngay khi người dùng nhập dữ liệu vào input
-    // - onBlur: validate khi người dùng rời khỏi input
     // - onTouched: validate khi người dùng rời khỏi input và đã tương tác với nó (touched)
     resolver: zodResolver(LoginSchema),
-    // dùng để tích hợp Zod schema vào React Hook Form, nó sẽ tự động validate form dựa trên schema đã định nghĩa
-    // chuyển định nghĩa schema của Zod thành resolver mà React Hook Form có thể hiểu được
-    //defaul values: giá trị mặc định của form, nếu không có thì sẽ là undefined, nhưng nếu có thì sẽ giúp form có giá trị ban đầu và tránh lỗi uncontrolled component
+    // tự động validate form dựa trên schema đã định nghĩa
+    // chuyển định nghĩa schema của Zod thành resolver
+    //defaul values: giá trị mặc định, nếu không có là undefined, nếu có thì là nó
     defaultValues: {
       email: "",
       password: "",

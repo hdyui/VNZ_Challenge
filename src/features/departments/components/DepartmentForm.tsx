@@ -49,7 +49,6 @@ export const DepartmentForm = ({
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
-      // CHÚ Ý: Chữ V viết HOA nhé (đã sửa)
       name: initialData?.name ?? "",
       departmentCode: initialData?.departmentCode ?? "",
       description: initialData?.description ?? "",
@@ -135,7 +134,6 @@ export const DepartmentForm = ({
             )}
           </div>
 
-          {/* Dùng ReactQuill cho Description */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-700">Mô tả</Label>
             <Controller

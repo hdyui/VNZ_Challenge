@@ -1,6 +1,5 @@
 import apiClient from "@/lib/axios";
 import type { UpdateProfileRequest } from "./type";
-import type { AccountListItem, AccountDetail } from "./type";
 import type {
   CreateAccountFormValues,
   UpdateAccountFormValues,
@@ -12,17 +11,13 @@ export const userApi = {
     userId: string,
     data: UpdateProfileRequest,
   ): Promise<any> {
-    return apiClient.put(
-      `/users/${userId}`,
-      data, // 4. TRUYỀN DATA VÀO ĐÂY NỮA
-    );
+    return apiClient.put(`/users/${userId}`, data);
   },
 
   uploadFile: async (file: File, folder: string): Promise<any> => {
     const formData = new FormData();
-    formData.append("File", file); // Bắt buộc viết hoa chữ F theo đúng Swagger của BE
-    formData.append("Folder", folder); // Bắt buộc viết hoa chữ F
-
+    formData.append("File", file);
+    formData.append("Folder", folder);
     const res = await apiClient.post("/auth/uploads", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -86,7 +81,6 @@ export const accountApi = {
     return res as any;
   },
 
-  // 4. Cập nhật Account (Gửi JSON)
   updateAccount: async (accountId: string, data: UpdateAccountFormValues) => {
     const res = await apiClient.put(`/accounts/${accountId}`, data);
     return res as any;
@@ -102,6 +96,6 @@ export const accountApi = {
 
   deleteAccount: async (accountId: string) => {
     const res = await apiClient.delete(`/accounts/${accountId}`);
-    return res as any; // Trả về 204 No Content
+    return res as any;
   },
 };

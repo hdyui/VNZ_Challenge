@@ -88,7 +88,7 @@ export const newsApi = {
   async getList(
     params?: NewsQueryParams,
   ): Promise<ApiResponse<PaginatedResponse<NewsListItem>>> {
-    const raw = await (apiClient.get("/public/news", {
+    const raw = await (apiClient.get("/news/public", {
       params,
     }) as unknown as Promise<RawApiListResponse<any>>);
     return mapListResponse(raw);

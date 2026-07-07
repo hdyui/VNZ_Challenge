@@ -18,13 +18,13 @@ export const dashboardApi = {
       accountsRes,
       recruitmentsRes,
     ] = await Promise.all([
-      apiClient.get("/public/news", {
+      apiClient.get("/news/public", {
         params: { page: 1, limit: 100 },
       }) as unknown as Promise<any>,
-      apiClient.get("/public/news", {
+      apiClient.get("/news/public", {
         params: { page: 1, limit: 100, status: "Published" },
       }) as unknown as Promise<any>,
-      apiClient.get("/public/news", {
+      apiClient.get("/news/public", {
         params: { page: 1, limit: 100, sortBy: "createdAt", sortOrder: "desc" },
       }) as unknown as Promise<any>,
       accountApi.getAccounts({
