@@ -3,10 +3,12 @@ import type {
   CreateRecruitmentPayload,
   PublicRecruitmentQueryParams,
   RecruitmentApplicationPayload,
+  ScheduleInterviewPayload,
   UpdateRecruitmentPayload,
 } from "../type";
 import { publicApi } from "../services";
 import { publicKeys } from "@/features/publicNews/hooks/usePublicNewsList";
+import { queryClient } from "@/lib/queryClient";
 
 // ─── GET /departments ───────────────────────────────────────────────────────────
 export const useDepartments = () => {
@@ -83,10 +85,52 @@ export const useDeleteRecruitment = () => {
   });
 };
 
-// ─── POST /recruitments/:id/apply ─────────────────────────────────────────────
 export const useApplyRecruitment = () => {
   return useMutation({
     mutationFn: (payload: RecruitmentApplicationPayload) =>
       publicApi.applyRecruitment(payload),
+  });
+};
+
+// ─── POST /recruitments/:id/count-viewer (Tăng view) ─────────────────────────
+export const useCountRecruitmentViewer = () => {
+  return useMutation({
+    mutationFn: (id: string) => publicApi.countRecruitmentViewer(id),
+  });
+};
+
+// ─── GET /recruitments/count-viewer (Lấy view cho Danh sách) ─────────────────
+export const useGetRecruitmentViews = () => {
+  return useQuery({
+    queryKey: ["recruitment-views"],
+    queryFn: () => publicApi.getRecruitmentViews(),
+  });
+};
+
+// ─── GET /recruitments/:id/count-viewer (Lấy view cho 1 Bài cụ thể) ──────────
+export const useGetRecruitmentViewDetail = (id: string) => {
+  return useQuery({
+    queryKey: ["recruitment-view-detail", id],
+    queryFn: () => publicApi.getRecruitmentViewDetail(id),
+    enabled: !!id,
+  });
+};
+
+// ─── PUT /recruitments/:id/open & close ──────────────────────────────────────
+export const useOpenRecruitment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => publicApi.openRecruitment(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["recruitments"] }), // Tự động load lại list sau khi open
+  });
+};
+
+export const useCloseRecruitment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => publicApi.closeRecruitment(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["recruitments"] }), // Tự động load lại list sau khi close
   });
 };

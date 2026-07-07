@@ -23,7 +23,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Textarea } from "@/shared/components/ui/textarea";
 import {
   ArrowLeft,
   BriefcaseBusiness,
@@ -76,20 +75,23 @@ const MetaItem = ({
 
 // ─── Apply form state ─────────────────────────────────────────────────────────
 
+// ─── Apply form state ─────────────────────────────────────────────────────────
+
+// Định nghĩa State cục bộ cho Form (lúc mới mở lên thì cvFile là null)
 interface ApplyForm {
   fullName: string;
   email: string;
   phone: string;
-  coverLetter: string;
-  cvUrl: string;
+  address: string;
+  cvFile: File | null;
 }
 
 const INITIAL_APPLY: ApplyForm = {
   fullName: "",
   email: "",
   phone: "",
-  coverLetter: "",
-  cvUrl: "",
+  address: "",
+  cvFile: null,
 };
 
 type ApplyError = Partial<Record<keyof ApplyForm, string>>;
@@ -103,6 +105,7 @@ const validateApply = (form: ApplyForm): ApplyError => {
     errors.email = "Vui lòng nhập địa chỉ email hợp lệ.";
   }
   if (!form.phone.trim()) errors.phone = "Số điện thoại là bắt buộc.";
+  if (!form.cvFile) errors.cvFile = "Vui lòng đính kèm CV (File PDF, DOC)."; // Bắt lỗi nếu chưa chọn File
   return errors;
 };
 
@@ -135,8 +138,17 @@ const ApplyDialog = ({
       setErrors(fieldErrors);
       return;
     }
+
+    // Gọi API với Payload chuẩn theo type của bác
     applyRecruitment(
-      { recruitmentId, ...form },
+      {
+        recruitmentId,
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        cvFile: form.cvFile as File, // Ép kiểu sang File vì đã validate ở trên chắc chắn nó không null
+      },
       { onSuccess: () => setSubmitted(true) },
     );
   };
@@ -246,33 +258,39 @@ const ApplyDialog = ({
                 </div>
               </div>
 
-              {/* CV URL */}
+              {/* Address */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-gray-700">
-                  Đường dẫn CV / Portfolio{" "}
+                  Địa chỉ{" "}
                   <span className="text-gray-400 font-normal">(tùy chọn)</span>
                 </Label>
                 <Input
-                  placeholder="https://drive.google.com/..."
-                  value={form.cvUrl}
-                  onChange={(e) => handleChange("cvUrl", e.target.value)}
+                  placeholder="Hồ Chí Minh..."
+                  value={form.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
                   className="border-gray-200 focus-visible:ring-indigo-500"
                 />
               </div>
 
-              {/* Cover letter */}
+              {/* CV File Upload */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-gray-700">
-                  Thư giới thiệu{" "}
-                  <span className="text-gray-400 font-normal">(tùy chọn)</span>
+                  Hồ sơ CV (PDF, DOC) <span className="text-red-500">*</span>
                 </Label>
-                <Textarea
-                  placeholder="Hãy chia sẻ đôi điều về bản thân và lý do bạn phù hợp với vị trí này..."
-                  value={form.coverLetter}
-                  onChange={(e) => handleChange("coverLetter", e.target.value)}
-                  rows={4}
-                  className="resize-none border-gray-200 focus-visible:ring-indigo-500 leading-relaxed"
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setForm((prev) => ({ ...prev, cvFile: file }));
+                    if (errors.cvFile)
+                      setErrors((prev) => ({ ...prev, cvFile: undefined }));
+                  }}
+                  className={`border-gray-200 file:text-indigo-600 focus-visible:ring-indigo-500 cursor-pointer ${errors.cvFile ? "border-red-300" : ""}`}
                 />
+                {errors.cvFile && (
+                  <p className="text-xs text-red-500">{errors.cvFile}</p>
+                )}
               </div>
             </div>
 
@@ -356,22 +374,12 @@ const RecruitmentDetails = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/recruitments")}
+            onClick={() => navigate("/admin/recruitments")}
             className="gap-2 text-gray-500 hover:text-gray-800 -ml-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Quay lại danh sách
           </Button>
-
-          {!isLoading && !isClosed && (
-            <Button
-              onClick={() => setApplyOpen(true)}
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700 shrink-0"
-            >
-              <Send className="h-4 w-4" />
-              Ứng tuyển ngay
-            </Button>
-          )}
         </div>
 
         {/* Cover image */}
@@ -571,7 +579,7 @@ const RecruitmentDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Bottom apply CTA */}
+            {/* Bottom apply CTA
             {!isLoading && (
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div>
@@ -598,7 +606,7 @@ const RecruitmentDetails = () => {
                   </Button>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>

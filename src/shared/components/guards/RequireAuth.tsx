@@ -13,6 +13,8 @@ const RequireAuth = ({ allowedRoles }: RequireAuthProps) => {
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     if (role === "Admin") return <Navigate to="/admin" replace />;
     if (role === "Employee") return <Navigate to="/employee" replace />;
+    if (role === "Applicant")
+      return <Navigate to="/applicant/applications" replace />;
 
     return <Navigate to="/" replace />;
   }

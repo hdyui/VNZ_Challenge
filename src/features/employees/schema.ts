@@ -46,12 +46,18 @@ export const CreateAccountSchema = z.object({
 
 export type CreateAccountFormValues = z.infer<typeof CreateAccountSchema>;
 
+// Sửa lại đoạn code của bác thành như thế này:
 export const UpdateAccountSchema = z.object({
-  email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
-  role: z.enum(["Admin", "Employee"]),
-  status: z.enum(["Active", "Inactive"]),
-});
+  // THÊM DÒNG NÀY VÀO ĐỂ HẾT LỖI:
+  email: z.string().email({ message: "Email không hợp lệ" }),
 
+  role: z.enum(["Admin", "Employee", "Applicant"], {
+    message: "Vui lòng chọn vai trò",
+  }),
+  status: z.enum(["Active", "Inactive"], {
+    message: "Vui lòng chọn trạng thái",
+  }),
+});
 export type UpdateAccountFormValues = z.infer<typeof UpdateAccountSchema>;
 
 export const ResetPasswordSchema = z

@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useApplyRecruitment,
   usePublicRecruitmentDetail,
+  useGetRecruitmentViewDetail,
+  useCountRecruitmentViewer,
 } from "../hooks/useRecruitment";
+import { ApplyFormSchema, type ApplyFormSchemaType } from "../schema";
+
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Separator } from "@/shared/components/ui/separator";
@@ -23,17 +29,19 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Textarea } from "@/shared/components/ui/textarea";
 import {
   ArrowLeft,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
   CheckCircle2,
-  ExternalLink,
   Loader2,
   Send,
   TrendingUp,
+  MapPin,
+  Users,
+  Clock,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import type { RecruitmentLevel } from "../type";
@@ -69,38 +77,6 @@ const MetaItem = ({
   </div>
 );
 
-// ─── Apply form state ─────────────────────────────────────────────────────────
-
-interface ApplyForm {
-  fullName: string;
-  email: string;
-  phone: string;
-  coverLetter: string;
-  cvUrl: string;
-}
-
-const INITIAL_APPLY: ApplyForm = {
-  fullName: "",
-  email: "",
-  phone: "",
-  coverLetter: "",
-  cvUrl: "",
-};
-
-type ApplyError = Partial<Record<keyof ApplyForm, string>>;
-
-const validateApply = (form: ApplyForm): ApplyError => {
-  const errors: ApplyError = {};
-  if (!form.fullName.trim()) errors.fullName = "Họ và tên là bắt buộc.";
-  if (!form.email.trim()) {
-    errors.email = "Email là bắt buộc.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = "Vui lòng nhập địa chỉ email hợp lệ.";
-  }
-  if (!form.phone.trim()) errors.phone = "Số điện thoại là bắt buộc.";
-  return errors;
-};
-
 // ─── Apply dialog ─────────────────────────────────────────────────────────────
 
 const ApplyDialog = ({
@@ -114,24 +90,35 @@ const ApplyDialog = ({
   recruitmentId: string;
   positionTitle?: string;
 }) => {
-  const [form, setForm] = useState<ApplyForm>(INITIAL_APPLY);
-  const [errors, setErrors] = useState<ApplyError>({});
   const [submitted, setSubmitted] = useState(false);
   const { mutate: applyRecruitment, isPending } = useApplyRecruitment();
 
-  const handleChange = (field: keyof ApplyForm, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ApplyFormSchemaType>({
+    resolver: zodResolver(ApplyFormSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+      cvFile: undefined,
+    },
+  });
 
-  const handleSubmit = () => {
-    const fieldErrors = validateApply(form);
-    if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors);
-      return;
-    }
+  const onSubmit = (data: ApplyFormSchemaType) => {
     applyRecruitment(
-      { recruitmentId, ...form },
+      {
+        recruitmentId,
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        cvFile: data.cvFile,
+      },
       { onSuccess: () => setSubmitted(true) },
     );
   };
@@ -139,8 +126,7 @@ const ApplyDialog = ({
   const handleOpenChange = (val: boolean) => {
     onOpenChange(val);
     if (!val) {
-      setForm(INITIAL_APPLY);
-      setErrors({});
+      reset();
       setSubmitted(false);
     }
   };
@@ -149,7 +135,6 @@ const ApplyDialog = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         {submitted ? (
-          /* ── Success state ── */
           <div className="flex flex-col items-center gap-4 py-8 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
               <CheckCircle2 className="h-8 w-8 text-green-500" />
@@ -159,11 +144,8 @@ const ApplyDialog = ({
                 Đã nộp đơn ứng tuyển!
               </DialogTitle>
               <DialogDescription className="text-sm text-gray-500 mt-1">
-                Cảm ơn bạn đã ứng tuyển vào vị trí{" "}
-                <span className="font-medium text-gray-700">
-                  {positionTitle}
-                </span>
-                . Chúng tôi sẽ xem xét hồ sơ của bạn và phản hồi sớm nhất.
+                Tài khoản và thông tin đơn ứng tuyển đã được gửi về email của
+                bạn. Vui lòng kiểm tra hòm thư.
               </DialogDescription>
             </DialogHeader>
             <Button
@@ -175,8 +157,7 @@ const ApplyDialog = ({
             </Button>
           </div>
         ) : (
-          /* ── Form state ── */
-          <>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-gray-900">
                 Ứng tuyển vị trí này
@@ -190,89 +171,122 @@ const ApplyDialog = ({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 pt-1">
-              {/* Full name */}
+            <div className="space-y-4 pt-4">
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-gray-700">
                   Họ và tên <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  placeholder="Nguyễn Văn A"
-                  value={form.fullName}
-                  onChange={(e) => handleChange("fullName", e.target.value)}
-                  className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.fullName ? "border-red-300" : ""}`}
+                <Controller
+                  name="fullName"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      placeholder="Nguyễn Văn A"
+                      className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.fullName ? "border-red-300" : ""}`}
+                    />
+                  )}
                 />
                 {errors.fullName && (
-                  <p className="text-xs text-red-500">{errors.fullName}</p>
+                  <p className="text-xs text-red-500">
+                    {errors.fullName.message}
+                  </p>
                 )}
               </div>
 
-              {/* Email + Phone */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-700">
                     Email <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    type="email"
-                    placeholder="you@email.com"
-                    value={form.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.email ? "border-red-300" : ""}`}
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="you@email.com"
+                        className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.email ? "border-red-300" : ""}`}
+                      />
+                    )}
                   />
                   {errors.email && (
-                    <p className="text-xs text-red-500">{errors.email}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium text-gray-700">
                     Số điện thoại <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    type="tel"
-                    placeholder="0901 234 567"
-                    value={form.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.phone ? "border-red-300" : ""}`}
+                  <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="0901 234 567"
+                        className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.phone ? "border-red-300" : ""}`}
+                      />
+                    )}
                   />
                   {errors.phone && (
-                    <p className="text-xs text-red-500">{errors.phone}</p>
+                    <p className="text-xs text-red-500">
+                      {errors.phone.message}
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* CV URL */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-gray-700">
-                  Đường dẫn CV / Portfolio{" "}
+                  Địa chỉ{" "}
                   <span className="text-gray-400 font-normal">(tùy chọn)</span>
                 </Label>
-                <Input
-                  placeholder="https://drive.google.com/..."
-                  value={form.cvUrl}
-                  onChange={(e) => handleChange("cvUrl", e.target.value)}
-                  className="border-gray-200 focus-visible:ring-indigo-500"
+                <Controller
+                  name="address"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      placeholder="Nhập địa chỉ hiện tại của bạn"
+                      className="border-gray-200 focus-visible:ring-indigo-500"
+                    />
+                  )}
                 />
               </div>
 
-              {/* Cover letter */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-gray-700">
-                  Thư giới thiệu{" "}
-                  <span className="text-gray-400 font-normal">(tùy chọn)</span>
+                  Tải lên CV (PDF) <span className="text-red-500">*</span>
                 </Label>
-                <Textarea
-                  placeholder="Hãy chia sẻ đôi điều về bản thân và lý do bạn phù hợp với vị trí này..."
-                  value={form.coverLetter}
-                  onChange={(e) => handleChange("coverLetter", e.target.value)}
-                  rows={4}
-                  className="resize-none border-gray-200 focus-visible:ring-indigo-500 leading-relaxed"
+                <Controller
+                  name="cvFile"
+                  control={control}
+                  render={({ field: { onChange, value, ...rest } }) => (
+                    <Input
+                      {...rest}
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => onChange(e.target.files?.[0])}
+                      className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.cvFile ? "border-red-300" : ""}`}
+                    />
+                  )}
                 />
+                {errors.cvFile && (
+                  <p className="text-xs text-red-500">
+                    {errors.cvFile.message as string}
+                  </p>
+                )}
               </div>
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
+            <DialogFooter className="gap-2 pt-6">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
@@ -281,7 +295,7 @@ const ApplyDialog = ({
                 Hủy
               </Button>
               <Button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={isPending}
                 className="gap-2 bg-indigo-600 hover:bg-indigo-700 min-w-[120px]"
               >
@@ -298,7 +312,7 @@ const ApplyDialog = ({
                 )}
               </Button>
             </DialogFooter>
-          </>
+          </form>
         )}
       </DialogContent>
     </Dialog>
@@ -310,11 +324,38 @@ const ApplyDialog = ({
 const RecruitmentDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  // DÙNG ĐÚNG HOOK CỦA TRANG CHI TIẾT
   const { data, isLoading, isError } = usePublicRecruitmentDetail(id ?? "");
+  const { mutate: countView } = useCountRecruitmentViewer();
+  const { data: viewDetailData } = useGetRecruitmentViewDetail(id ?? "");
+
   const [applyOpen, setApplyOpen] = useState(false);
 
   const detail = data?.value;
   const isClosed = detail?.status === "Closed";
+
+  // Lấy view thực tế
+  const rawViewData = viewDetailData?.value as any;
+  const realViewCount =
+    rawViewData && typeof rawViewData === "object"
+      ? (rawViewData.viewCount ?? 0) // Nếu là Object thì chui vào lấy đúng thuộc tính viewCount
+      : (rawViewData ?? detail?.viewCount ?? 0); // Nếu BE hâm hâm trả về số thì lấy số
+  // Đếm lượt View (Chỉ Guest và Applicant)
+  useEffect(() => {
+    if (id) {
+      const currentRole = localStorage.getItem("userRole");
+
+      if (
+        !currentRole ||
+        currentRole === "Applicant" ||
+        currentRole === "Employee"
+      ) {
+        countView(id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (isError) {
     return (
@@ -345,8 +386,7 @@ const RecruitmentDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50/50 p-6">
-      <div className="mx-auto max-w-4xl space-y-6">
-        {/* Top bar: back + quick apply */}
+      <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex items-center justify-between gap-4">
           <Button
             variant="ghost"
@@ -354,25 +394,30 @@ const RecruitmentDetails = () => {
             onClick={() => navigate("/recruitments")}
             className="gap-2 text-gray-500 hover:text-gray-800 -ml-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Quay lại danh sách
+            <ArrowLeft className="h-4 w-4" /> Quay lại danh sách
           </Button>
-
           {!isLoading && !isClosed && (
             <Button
               onClick={() => setApplyOpen(true)}
               className="gap-2 bg-indigo-600 hover:bg-indigo-700 shrink-0"
             >
-              <Send className="h-4 w-4" />
-              Ứng tuyển ngay
+              <Send className="h-4 w-4" /> Ứng tuyển ngay
             </Button>
           )}
         </div>
 
+        {!isLoading && detail?.coverImageUrl && (
+          <div className="w-full h-64 md:h-80 rounded-2xl overflow-hidden shadow-sm">
+            <img
+              src={detail.coverImageUrl}
+              alt={detail.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Sidebar */}
           <div className="space-y-4">
-            {/* Meta card */}
             <Card className="border-gray-200 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
@@ -381,20 +426,13 @@ const RecruitmentDetails = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoading ? (
-                  <>
+                  <div className="space-y-4">
                     <Skeleton className="h-8 w-full" />
                     <Skeleton className="h-8 w-full" />
                     <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <MetaItem
-                      icon={BriefcaseBusiness}
-                      label="Tiêu đề"
-                      value={detail?.title}
-                    />
-                    <Separator className="bg-gray-100" />
                     <MetaItem
                       icon={Building2}
                       label="Phòng ban"
@@ -420,6 +458,41 @@ const RecruitmentDetails = () => {
                     />
                     <Separator className="bg-gray-100" />
                     <MetaItem
+                      icon={MapPin}
+                      label="Địa điểm"
+                      value={detail?.location || "Chưa cập nhật"}
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={Clock}
+                      label="Loại hình làm việc"
+                      value={detail?.workingType || "Chưa cập nhật"}
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={Users}
+                      label="Số lượng tuyển"
+                      value={
+                        detail?.hiringQuantity
+                          ? `${detail.hiringQuantity} người`
+                          : "Không giới hạn"
+                      }
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={CalendarDays}
+                      label="Hạn nộp hồ sơ"
+                      value={
+                        detail?.deadline
+                          ? format(
+                              new Date(detail.deadline),
+                              "dd/MM/yyyy HH:mm",
+                            )
+                          : "Chưa cập nhật"
+                      }
+                    />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
                       icon={CalendarDays}
                       label="Ngày đăng"
                       value={
@@ -428,15 +501,19 @@ const RecruitmentDetails = () => {
                           : ""
                       }
                     />
+                    <Separator className="bg-gray-100" />
+                    <MetaItem
+                      icon={Eye}
+                      label="Lượt xem"
+                      value={realViewCount}
+                    />
                   </>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Main content */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Title header */}
             <Card className="border-gray-200 shadow-sm">
               <CardContent className="pt-6 pb-6">
                 {isLoading ? (
@@ -456,22 +533,27 @@ const RecruitmentDetails = () => {
                         {detail?.level}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5" />
-                      {typeof detail?.department === "object"
-                        ? (detail.department as { name: string })?.name
-                        : detail?.department}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1.5">
+                        <Building2 className="h-4 w-4" />
+                        {typeof detail?.department === "object"
+                          ? (detail.department as { name: string })?.name
+                          : detail?.department}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+                        {detail?.location || "Chưa cập nhật"}
+                      </span>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Job Description */}
             <Card className="border-gray-200 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                  Mô tả công việc
+                  Chi tiết công việc
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -486,43 +568,15 @@ const RecruitmentDetails = () => {
                   </div>
                 ) : (
                   <div
-                    className="prose prose-sm prose-gray max-w-none text-gray-700 leading-relaxed"
+                    className="prose prose-sm prose-indigo max-w-none text-gray-700 leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: detail?.jobDescription ?? "",
+                      __html: detail?.contentHtml || "Chưa có mô tả công việc.",
                     }}
                   />
                 )}
               </CardContent>
             </Card>
 
-            {/* Reference Info */}
-            {(isLoading || detail?.referenceInfo) && (
-              <Card className="border-gray-200 shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Thông tin tham khảo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  ) : (
-                    <div
-                      className="prose prose-sm prose-gray max-w-none text-gray-700 leading-relaxed"
-                      dangerouslySetInnerHTML={{
-                        __html: detail?.referenceInfo ?? "",
-                      }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Bottom apply CTA */}
             {!isLoading && (
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div>
@@ -553,7 +607,6 @@ const RecruitmentDetails = () => {
           </div>
         </div>
       </div>
-
       {detail && (
         <ApplyDialog
           open={applyOpen}

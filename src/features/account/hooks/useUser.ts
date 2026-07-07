@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -47,5 +47,61 @@ export const useDeleteAccountMutation = () => {
     },
     onError: (err: any) =>
       toast.error(err.response?.data?.message || "Xoá tài khoản thất bại!"),
+  });
+};
+export const useCreateLeave = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: any) => userApi.createLeaveApplication(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-leaves"] }),
+  });
+};
+
+export const useGetWorkSchedules = (params: {
+  FromDate: string;
+  ToDate: string;
+}) => {
+  return useQuery({
+    queryKey: ["work-schedules", params],
+    queryFn: () => userApi.getWorkSchedules(params),
+    enabled: !!params.FromDate && !!params.ToDate,
+  });
+};
+
+export const useCreateScheduleLeave = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // Sửa lại mutationFn để nhận tham số id riêng biệt
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      userApi.createScheduleLeave(id, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-leaves"] }),
+  });
+};
+
+export const useCancelLeave = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => userApi.cancelLeave(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["my-leaves"] });
+      queryClient.invalidateQueries({ queryKey: ["leave-detail", id] });
+    },
+  });
+};
+
+// Lấy danh sách đơn
+export const useGetMyLeaves = (params?: any) => {
+  return useQuery({
+    queryKey: ["my-leaves", params],
+    queryFn: () => userApi.getMyLeaves(params),
+  });
+};
+
+// Lấy chi tiết 1 đơn
+export const useGetLeaveDetail = (id: string) => {
+  return useQuery({
+    queryKey: ["leave-detail", id],
+    queryFn: () => userApi.getLeaveDetail(id),
+    enabled: !!id,
   });
 };
