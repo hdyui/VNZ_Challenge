@@ -23,7 +23,7 @@ export const userApi = {
         "Content-Type": "multipart/form-data",
       },
     });
-    console.log("Sự thật về biến res:", res);
+    // console.log("Sự thật về biến res:", res);
     return res;
   },
   getUserById: async (userId: string) => {

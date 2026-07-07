@@ -35,7 +35,7 @@ export const LoginPage = () => {
     },
   });
   const onSubmit = async (data: LoginSchemaType) => {
-    console.log(data);
+    // console.log(data);
     loginMutation.mutate(data);
   };
 

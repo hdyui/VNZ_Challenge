@@ -41,10 +41,11 @@ import type { RecruitmentLevel } from "../type";
 const LEVEL_COLOR: Record<RecruitmentLevel, string> = {
   all: "bg-slate-100 text-slate-700 border-slate-200",
   Intern: "bg-slate-100 text-slate-700 border-slate-200",
-  Fresher: "bg-green-50 text-green-700 border-green-200",
-  Junior: "bg-blue-50 text-blue-700 border-blue-200",
+  Fresher: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Junior: "bg-sky-50 text-sky-700 border-sky-200",
   Middle: "bg-violet-50 text-violet-700 border-violet-200",
-  Senior: "bg-amber-50 text-amber-700 border-amber-200",
+  Senior:
+    "bg-gradient-to-r from-amber-100 to-amber-50 text-amber-700 border-amber-200",
 };
 
 const MetaItem = ({
@@ -57,14 +58,14 @@ const MetaItem = ({
   value: React.ReactNode;
 }) => (
   <div className="flex items-start gap-3">
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 mt-0.5">
-      <Icon className="h-4 w-4 text-gray-500" />
+    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0F6B66]/10 mt-0.5">
+      <Icon className="h-4 w-4 text-[#0F6B66]" />
     </div>
     <div>
-      <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+      <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">
         {label}
       </p>
-      <div className="mt-0.5 text-sm font-medium text-gray-800">{value}</div>
+      <div className="mt-0.5 text-sm font-medium text-slate-800">{value}</div>
     </div>
   </div>
 );
@@ -155,12 +156,12 @@ const ApplyDialog = ({
               <CheckCircle2 className="h-8 w-8 text-green-500" />
             </div>
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-gray-900">
+              <DialogTitle className="text-lg font-semibold text-slate-900">
                 Đã nộp đơn ứng tuyển!
               </DialogTitle>
-              <DialogDescription className="text-sm text-gray-500 mt-1">
+              <DialogDescription className="text-sm text-slate-500 mt-1">
                 Cảm ơn bạn đã ứng tuyển vào vị trí{" "}
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-slate-700">
                   {positionTitle}
                 </span>
                 . Chúng tôi sẽ xem xét hồ sơ của bạn và phản hồi sớm nhất.
@@ -168,7 +169,7 @@ const ApplyDialog = ({
             </DialogHeader>
             <Button
               variant="outline"
-              className="mt-2 border-gray-200"
+              className="mt-2 border-slate-200"
               onClick={() => handleOpenChange(false)}
             >
               Đóng
@@ -178,12 +179,12 @@ const ApplyDialog = ({
           /* ── Form state ── */
           <>
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-gray-900">
+              <DialogTitle className="text-lg font-semibold text-slate-900">
                 Ứng tuyển vị trí này
               </DialogTitle>
-              <DialogDescription className="text-sm text-gray-500">
+              <DialogDescription className="text-sm text-slate-500">
                 {positionTitle && (
-                  <span className="font-medium text-indigo-700">
+                  <span className="font-medium text-[#0F6B66]">
                     {positionTitle}
                   </span>
                 )}
@@ -193,14 +194,14 @@ const ApplyDialog = ({
             <div className="space-y-4 pt-1">
               {/* Full name */}
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-medium text-slate-700">
                   Họ và tên <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   placeholder="Nguyễn Văn A"
                   value={form.fullName}
                   onChange={(e) => handleChange("fullName", e.target.value)}
-                  className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.fullName ? "border-red-300" : ""}`}
+                  className={`border-slate-200 focus-visible:ring-[#0F6B66] ${errors.fullName ? "border-red-300" : ""}`}
                 />
                 {errors.fullName && (
                   <p className="text-xs text-red-500">{errors.fullName}</p>
@@ -210,7 +211,7 @@ const ApplyDialog = ({
               {/* Email + Phone */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">
+                  <Label className="text-sm font-medium text-slate-700">
                     Email <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -218,14 +219,14 @@ const ApplyDialog = ({
                     placeholder="you@email.com"
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.email ? "border-red-300" : ""}`}
+                    className={`border-slate-200 focus-visible:ring-[#0F6B66] ${errors.email ? "border-red-300" : ""}`}
                   />
                   {errors.email && (
                     <p className="text-xs text-red-500">{errors.email}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">
+                  <Label className="text-sm font-medium text-slate-700">
                     Số điện thoại <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -233,7 +234,7 @@ const ApplyDialog = ({
                     placeholder="0901 234 567"
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className={`border-gray-200 focus-visible:ring-indigo-500 ${errors.phone ? "border-red-300" : ""}`}
+                    className={`border-slate-200 focus-visible:ring-[#0F6B66] ${errors.phone ? "border-red-300" : ""}`}
                   />
                   {errors.phone && (
                     <p className="text-xs text-red-500">{errors.phone}</p>
@@ -243,30 +244,30 @@ const ApplyDialog = ({
 
               {/* CV URL */}
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-medium text-slate-700">
                   Đường dẫn CV / Portfolio{" "}
-                  <span className="text-gray-400 font-normal">(tùy chọn)</span>
+                  <span className="text-slate-400 font-normal">(tùy chọn)</span>
                 </Label>
                 <Input
                   placeholder="https://drive.google.com/..."
                   value={form.cvUrl}
                   onChange={(e) => handleChange("cvUrl", e.target.value)}
-                  className="border-gray-200 focus-visible:ring-indigo-500"
+                  className="border-slate-200 focus-visible:ring-[#0F6B66]"
                 />
               </div>
 
               {/* Cover letter */}
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-medium text-slate-700">
                   Thư giới thiệu{" "}
-                  <span className="text-gray-400 font-normal">(tùy chọn)</span>
+                  <span className="text-slate-400 font-normal">(tùy chọn)</span>
                 </Label>
                 <Textarea
                   placeholder="Hãy chia sẻ đôi điều về bản thân và lý do bạn phù hợp với vị trí này..."
                   value={form.coverLetter}
                   onChange={(e) => handleChange("coverLetter", e.target.value)}
                   rows={4}
-                  className="resize-none border-gray-200 focus-visible:ring-indigo-500 leading-relaxed"
+                  className="resize-none border-slate-200 focus-visible:ring-[#0F6B66] leading-relaxed"
                 />
               </div>
             </div>
@@ -276,14 +277,14 @@ const ApplyDialog = ({
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={isPending}
-                className="border-gray-200 text-gray-600"
+                className="border-slate-200 text-slate-600"
               >
                 Hủy
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={isPending}
-                className="gap-2 bg-indigo-600 hover:bg-indigo-700 min-w-[120px]"
+                className="gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25 min-w-[120px]"
               >
                 {isPending ? (
                   <>
@@ -318,22 +319,22 @@ const RecruitmentDetails = () => {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gray-50/50 p-6 flex items-center justify-center">
-        <Card className="w-full max-w-md text-center border-gray-200 shadow-sm">
+      <div className="min-h-screen bg-gradient-to-b from-[#0F6B66]/5 via-white to-white p-6 flex items-center justify-center">
+        <Card className="w-full max-w-md text-center border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl">
           <CardContent className="pt-10 pb-10 space-y-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 mx-auto">
               <BriefcaseBusiness className="h-6 w-6 text-red-400" />
             </div>
-            <p className="text-base font-semibold text-gray-800">
+            <p className="text-base font-semibold text-slate-800">
               Không tìm thấy vị trí
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Vị trí này có thể đã bị gỡ bỏ hoặc không tồn tại.
             </p>
             <Button
               variant="outline"
               onClick={() => navigate("/recruitments")}
-              className="mt-4 border-gray-200"
+              className="mt-4 border-slate-200"
             >
               Quay lại danh sách
             </Button>
@@ -344,7 +345,7 @@ const RecruitmentDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#0F6B66]/5 via-white to-white p-6">
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Top bar: back + quick apply */}
         <div className="flex items-center justify-between gap-4">
@@ -352,7 +353,7 @@ const RecruitmentDetails = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate("/recruitments")}
-            className="gap-2 text-gray-500 hover:text-gray-800 -ml-2"
+            className="gap-2 text-slate-500 hover:text-slate-800 -ml-2"
           >
             <ArrowLeft className="h-4 w-4" />
             Quay lại danh sách
@@ -361,7 +362,7 @@ const RecruitmentDetails = () => {
           {!isLoading && !isClosed && (
             <Button
               onClick={() => setApplyOpen(true)}
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700 shrink-0"
+              className="gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25 shrink-0"
             >
               <Send className="h-4 w-4" />
               Ứng tuyển ngay
@@ -373,9 +374,9 @@ const RecruitmentDetails = () => {
           {/* Sidebar */}
           <div className="space-y-4">
             {/* Meta card */}
-            <Card className="border-gray-200 shadow-sm">
+            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
                   Thông tin vị trí
                 </CardTitle>
               </CardHeader>
@@ -394,7 +395,7 @@ const RecruitmentDetails = () => {
                       label="Tiêu đề"
                       value={detail?.title}
                     />
-                    <Separator className="bg-gray-100" />
+                    <Separator className="bg-slate-100" />
                     <MetaItem
                       icon={Building2}
                       label="Phòng ban"
@@ -404,7 +405,7 @@ const RecruitmentDetails = () => {
                           : detail?.department
                       }
                     />
-                    <Separator className="bg-gray-100" />
+                    <Separator className="bg-slate-100" />
                     <MetaItem
                       icon={TrendingUp}
                       label="Cấp bậc"
@@ -418,7 +419,7 @@ const RecruitmentDetails = () => {
                         ) : null
                       }
                     />
-                    <Separator className="bg-gray-100" />
+                    <Separator className="bg-slate-100" />
                     <MetaItem
                       icon={CalendarDays}
                       label="Ngày đăng"
@@ -437,7 +438,7 @@ const RecruitmentDetails = () => {
           {/* Main content */}
           <div className="lg:col-span-2 space-y-5">
             {/* Title header */}
-            <Card className="border-gray-200 shadow-sm">
+            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
               <CardContent className="pt-6 pb-6">
                 {isLoading ? (
                   <div className="space-y-3">
@@ -447,7 +448,7 @@ const RecruitmentDetails = () => {
                 ) : (
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
-                      <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                      <h1 className="text-2xl font-bold text-slate-900 leading-tight">
                         {detail?.title}
                       </h1>
                       <span
@@ -456,7 +457,7 @@ const RecruitmentDetails = () => {
                         {detail?.level}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                    <p className="text-sm text-slate-500 flex items-center gap-1.5">
                       <Building2 className="h-3.5 w-3.5" />
                       {typeof detail?.department === "object"
                         ? (detail.department as { name: string })?.name
@@ -468,9 +469,9 @@ const RecruitmentDetails = () => {
             </Card>
 
             {/* Job Description */}
-            <Card className="border-gray-200 shadow-sm">
+            <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide">
                   Mô tả công việc
                 </CardTitle>
               </CardHeader>
@@ -486,7 +487,7 @@ const RecruitmentDetails = () => {
                   </div>
                 ) : (
                   <div
-                    className="prose prose-sm prose-gray max-w-none text-gray-700 leading-relaxed"
+                    className="prose prose-sm prose-gray max-w-none text-slate-700 leading-relaxed"
                     dangerouslySetInnerHTML={{
                       __html: detail?.jobDescription ?? "",
                     }}
@@ -497,9 +498,9 @@ const RecruitmentDetails = () => {
 
             {/* Reference Info */}
             {(isLoading || detail?.referenceInfo) && (
-              <Card className="border-gray-200 shadow-sm">
+              <Card className="border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.05)] rounded-2xl">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
+                  <CardTitle className="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2">
                     <ExternalLink className="h-3.5 w-3.5" />
                     Thông tin tham khảo
                   </CardTitle>
@@ -512,7 +513,7 @@ const RecruitmentDetails = () => {
                     </div>
                   ) : (
                     <div
-                      className="prose prose-sm prose-gray max-w-none text-gray-700 leading-relaxed"
+                      className="prose prose-sm prose-gray max-w-none text-slate-700 leading-relaxed"
                       dangerouslySetInnerHTML={{
                         __html: detail?.referenceInfo ?? "",
                       }}
@@ -524,25 +525,26 @@ const RecruitmentDetails = () => {
 
             {/* Bottom apply CTA */}
             {!isLoading && (
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
-                <div>
-                  <p className="text-base font-semibold text-gray-900">
+              <div className="relative overflow-hidden rounded-2xl border border-[#0F6B66]/15 bg-gradient-to-r from-[#0F6B66]/5 via-white to-amber-50/40 p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
+                <span className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#0F6B66]/10 blur-3xl" />
+                <div className="relative">
+                  <p className="text-base font-semibold text-slate-900">
                     {isClosed
                       ? "Vị trí này hiện đã đóng tuyển"
                       : "Sẵn sàng ứng tuyển?"}
                   </p>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-sm text-slate-500 mt-0.5">
                     {isClosed
                       ? "Hãy theo dõi các vị trí khác đang mở."
                       : "Tham gia đội ngũ của chúng tôi và tạo ra sự khác biệt."}
                   </p>
                 </div>
-                <div className="w-full sm:w-auto shrink-0">
+                <div className="relative w-full sm:w-auto shrink-0">
                   <Button
                     onClick={() =>
                       isClosed ? navigate("/recruitments") : setApplyOpen(true)
                     }
-                    className="w-full sm:w-auto gap-2 bg-indigo-600 hover:bg-indigo-700"
+                    className="w-full sm:w-auto gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25"
                   >
                     <Send className="h-4 w-4" />
                     {isClosed ? "Xem các vị trí khác" : "Ứng tuyển ngay"}

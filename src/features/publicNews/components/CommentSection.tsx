@@ -1,5 +1,10 @@
-// src/features/publicNews/components/CommentSection.tsx
-import { useState, type FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useCurrentUserRole } from "@/features/auth/hooks/useCurrentUserRole";
@@ -15,17 +20,15 @@ const PAGE_SIZE = 10;
 
 const CommentSection = ({ newsId }: CommentSectionProps) => {
   const role = useCurrentUserRole();
-  const isAdmin = role === "admin";
-  const canComment = role !== "anonymous"; // Applicant/Employee/Admin đều thấy form
+  const isAdmin = role === "Admin";
+  const canComment = role !== "Anonymous";
 
   const [page, setPage] = useState(1);
 
-  // Chỉ lấy comment GỐC (không truyền parentCommentId). Replies được từng
-  // CommentItem tự fetch riêng khi người dùng bấm "Xem trả lời", vì BE trả
-  // replies qua chính endpoint này với query ParentCommentId, phân trang riêng.
   const { data, isLoading, isError } = useNewsComments(newsId, {
     page,
     pageSize: PAGE_SIZE,
+    includeHidden: isAdmin,
   });
   const createComment = useCreateComment(newsId);
 
@@ -35,22 +38,51 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
     authorName: string;
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Bấm "Trả lời" ở một comment -> tự đưa con trỏ vào ô nhập để gõ luôn.
+  useEffect(() => {
+    if (replyTo) {
+      textareaRef.current?.focus();
+    }
+  }, [replyTo]);
 
   const pagination = (data as any)?.value;
-  const rootComments = pagination?.items ?? [];
+  // Sắp xếp bình luận gốc từ sớm nhất -> trễ nhất trong phạm vi trang hiện tại.
+  const rootComments = [...(pagination?.items ?? [])]
+    .filter(Boolean)
+    .sort(
+      (a: any, b: any) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
   const totalCount: number = pagination?.totalCount ?? 0;
+  // totalCount ở trên chỉ đếm comment gốc (root) trong toàn bộ danh sách.
+  // Để hiện tổng số bình luận thực tế (gốc + trả lời), cộng thêm replyCount
+  // của từng comment gốc đang hiển thị ở trang hiện tại.
+  // Lưu ý: nếu có nhiều trang comment gốc, số này chỉ chính xác cho các
+  // comment gốc đã tải (trang hiện tại) — nếu BE có field tổng số bao gồm
+  // cả reply (vd. totalCommentCount) thì nên dùng field đó thay thế.
+  const totalCommentCount: number =
+    totalCount +
+    rootComments.reduce((sum: number, c: any) => sum + (c.replyCount ?? 0), 0);
   const totalPages: number = pagination
     ? Math.ceil(pagination.totalCount / pagination.pageSize)
     : 0;
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const submitComment = () => {
     const trimmed = content.trim();
-    if (!trimmed) return;
+    if (!trimmed || createComment.isPending) return;
+
+    // Khi đang trả lời, gắn "@Tên: " vào đầu nội dung để hiển thị rõ đang
+    // phản hồi ai (BE lưu luôn trong content). Dùng dấu ":" làm ranh giới rõ
+    // ràng giữa tên (có thể chứa khoảng trắng) và nội dung tin nhắn.
+    const finalContent = replyTo
+      ? `@${replyTo.authorName}: ${trimmed}`
+      : trimmed;
 
     setErrorMsg(null);
     createComment.mutate(
-      { content: trimmed, parentCommentId: replyTo?.id ?? null },
+      { content: finalContent, parentCommentId: replyTo?.id ?? null },
       {
         onSuccess: () => {
           setContent("");
@@ -67,58 +99,29 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
     );
   };
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    submitComment();
+  };
+
+  // Enter để gửi bình luận, Shift+Enter để xuống dòng.
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitComment();
+    }
+  };
+
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Bình luận{totalCount > 0 ? ` (${totalCount})` : ""}
+      <h2 className="text-xl font-semibold text-slate-900 mb-4">
+        Bình luận{totalCommentCount > 0 ? ` (${totalCommentCount})` : ""}
       </h2>
-
-      {canComment ? (
-        <form onSubmit={handleSubmit} className="mb-8">
-          {replyTo && (
-            <div className="flex items-center justify-between text-sm bg-blue-50 text-blue-700 rounded-md px-3 py-2 mb-2">
-              <span>
-                Đang trả lời <b>{replyTo.authorName}</b>
-              </span>
-              <button
-                type="button"
-                onClick={() => setReplyTo(null)}
-                className="underline"
-              >
-                Hủy
-              </button>
-            </div>
-          )}
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={
-              replyTo ? "Viết phản hồi..." : "Viết bình luận của bạn..."
-            }
-            rows={3}
-            disabled={createComment.isPending}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50"
-          />
-          {errorMsg && <p className="text-sm text-red-500 mt-1">{errorMsg}</p>}
-          <div className="flex justify-end mt-2">
-            <Button
-              type="submit"
-              disabled={createComment.isPending || !content.trim()}
-            >
-              {createComment.isPending ? "Đang gửi..." : "Gửi bình luận"}
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <p className="text-sm text-gray-500 mb-8">
-          Vui lòng đăng nhập để tham gia bình luận.
-        </p>
-      )}
 
       {isLoading && (
         <div className="space-y-4">
-          <Skeleton className="h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full rounded-2xl bg-slate-200" />
+          <Skeleton className="h-14 w-full rounded-2xl bg-slate-200" />
         </div>
       )}
 
@@ -129,7 +132,7 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
       )}
 
       {!isLoading && !isError && rootComments.length === 0 && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
         </p>
       )}
@@ -142,11 +145,66 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
             newsId={newsId}
             isAdmin={isAdmin}
             canReply={canComment}
-            onReplyClick={() =>
-              setReplyTo({ id: comment.id, authorName: comment.authorName })
+            onReplyClick={(targetAuthorName: string) =>
+              setReplyTo({
+                id: comment.id, // luôn là id comment gốc, kể cả khi reply 1 reply
+                authorName: targetAuthorName,
+              })
             }
           />
         ))}
+      </div>
+      <div className="mt-5">
+        {canComment ? (
+          <form onSubmit={handleSubmit} className="mb-8">
+            {replyTo && (
+              <div className="flex items-center justify-between text-sm bg-[#0F6B66]/10 text-[#0F6B66] rounded-lg px-3 py-2 mb-2 transition-colors">
+                <span>
+                  Đang trả lời{" "}
+                  <b className="font-semibold">{replyTo.authorName}</b>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setReplyTo(null)}
+                  className="underline hover:text-[#0B4F4B]"
+                >
+                  Hủy
+                </button>
+              </div>
+            )}
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                replyTo ? "Viết phản hồi..." : "Viết bình luận của bạn..."
+              }
+              rows={3}
+              disabled={createComment.isPending}
+              className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-[#0F6B66] focus:ring-4 focus:ring-[#0F6B66]/20 transition-all resize-none disabled:bg-slate-50"
+            />
+            {errorMsg && (
+              <p className="text-sm text-red-500 mt-1">{errorMsg}</p>
+            )}
+            <p className="text-xs text-slate-400 mt-1">
+              Nhấn Enter để gửi, Shift + Enter để xuống dòng.
+            </p>
+            <div className="flex justify-end mt-2">
+              <Button
+                type="submit"
+                disabled={createComment.isPending || !content.trim()}
+                className="rounded-lg bg-[#0F6B66] hover:bg-[#0B4F4B] text-white transition-colors"
+              >
+                {createComment.isPending ? "Đang gửi..." : "Gửi bình luận"}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="text-sm text-slate-500 mb-8">
+            Vui lòng đăng nhập để tham gia bình luận.
+          </p>
+        )}
       </div>
 
       {/* ─── Pagination cho comment gốc ─── */}
@@ -155,16 +213,16 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
           <button
             onClick={() => setPage((old) => Math.max(old - 1, 1))}
             disabled={!pagination?.hasPreviousPage}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
               !pagination?.hasPreviousPage
-                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
             }`}
           >
             Trước
           </button>
 
-          <span className="text-sm font-medium px-4">
+          <span className="text-sm font-medium px-4 text-slate-700 tabular-nums">
             Trang {pagination?.pageIndex} / {totalPages}
           </span>
 
@@ -173,10 +231,10 @@ const CommentSection = ({ newsId }: CommentSectionProps) => {
               setPage((old) => (pagination?.hasNextPage ? old + 1 : old))
             }
             disabled={!pagination?.hasNextPage}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
               !pagination?.hasNextPage
-                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
             }`}
           >
             Sau

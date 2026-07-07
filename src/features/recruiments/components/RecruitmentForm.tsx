@@ -144,14 +144,14 @@ export const RecruitmentForm = ({
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-gradient-to-r from-white via-white to-[#0F6B66]/5 p-5 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             {isEdit
               ? "Chỉnh sửa vị trí tuyển dụng"
               : "Đăng vị trí tuyển dụng mới"}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {isEdit
               ? "Cập nhật thông tin và nội dung của vị trí này"
               : "Điền thông tin chi tiết để đăng tin tuyển dụng mới"}
@@ -164,12 +164,13 @@ export const RecruitmentForm = ({
             variant="outline"
             onClick={() => navigate("/admin/recruitments")}
             disabled={isLoading}
+            className="border-slate-200"
           >
             Hủy
           </Button>
           <Button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700"
+            className="gap-2 bg-[#0F6B66] hover:bg-[#0B4F4B] shadow-lg shadow-[#0F6B66]/25"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -185,9 +186,9 @@ export const RecruitmentForm = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cột chính: tiêu đề + nội dung */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="shadow-sm border-gray-200">
+          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
             <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-slate-700">
                 Tiêu đề vị trí
               </label>
               <Controller
@@ -197,7 +198,7 @@ export const RecruitmentForm = ({
                   <Input
                     {...field}
                     placeholder="vd: Lập trình viên Frontend"
-                    className="h-11 rounded-xl border-gray-200 bg-slate-50 text-base focus:bg-white focus:border-indigo-300"
+                    className="h-11 rounded-xl border-slate-200 bg-slate-50 text-base focus:bg-white focus:border-[#0F6B66]/40"
                   />
                 )}
               />
@@ -207,16 +208,16 @@ export const RecruitmentForm = ({
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-gray-200 overflow-visible">
+          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl overflow-visible">
             <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-slate-700">
                 Nội dung (mô tả công việc, yêu cầu, quyền lợi...)
               </label>
               <Controller
                 name="contentHtml"
                 control={control}
                 render={({ field }) => (
-                  <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                  <div className="rounded-xl overflow-hidden border border-slate-200 bg-white focus-within:border-[#0F6B66]/40 focus-within:ring-1 focus-within:ring-[#0F6B66]/15 transition-colors">
                     <ReactQuill
                       ref={quillRef}
                       theme="snow"
@@ -240,10 +241,10 @@ export const RecruitmentForm = ({
 
         {/* Cột phụ: thông tin tuyển dụng + ảnh bìa */}
         <div className="space-y-6">
-          <Card className="shadow-sm border-gray-200">
+          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
             <CardContent className="p-5 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Phòng ban
                 </label>
                 <Controller
@@ -255,7 +256,7 @@ export const RecruitmentForm = ({
                       onValueChange={field.onChange}
                       disabled={isLoadingDepartments}
                     >
-                      <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
+                      <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-white">
                         <SelectValue
                           placeholder={
                             isLoadingDepartments
@@ -282,7 +283,7 @@ export const RecruitmentForm = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Cấp bậc
                 </label>
                 <Controller
@@ -290,7 +291,7 @@ export const RecruitmentForm = ({
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
+                      <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-white">
                         <SelectValue placeholder="Chọn cấp bậc" />
                       </SelectTrigger>
                       <SelectContent>
@@ -309,7 +310,7 @@ export const RecruitmentForm = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Loại hình làm việc
                 </label>
                 <Controller
@@ -317,7 +318,7 @@ export const RecruitmentForm = ({
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
+                      <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-white">
                         <SelectValue placeholder="Chọn loại hình làm việc" />
                       </SelectTrigger>
                       <SelectContent>
@@ -338,7 +339,7 @@ export const RecruitmentForm = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Địa điểm
                 </label>
                 <Controller
@@ -348,7 +349,7 @@ export const RecruitmentForm = ({
                     <Input
                       {...field}
                       placeholder="vd: Hà Nội / Hồ Chí Minh / Remote"
-                      className="h-11 rounded-xl border-gray-200 bg-white"
+                      className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
                     />
                   )}
                 />
@@ -361,7 +362,7 @@ export const RecruitmentForm = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-slate-700">
                     Số lượng tuyển
                   </label>
                   <Controller
@@ -373,7 +374,7 @@ export const RecruitmentForm = ({
                         min={1}
                         {...field}
                         value={field.value ?? ""}
-                        className="h-11 rounded-xl border-gray-200 bg-white"
+                        className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
                       />
                     )}
                   />
@@ -385,7 +386,7 @@ export const RecruitmentForm = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-slate-700">
                     Hồ sơ tối đa
                   </label>
                   <Controller
@@ -397,7 +398,7 @@ export const RecruitmentForm = ({
                         min={1}
                         {...field}
                         value={field.value ?? ""}
-                        className="h-11 rounded-xl border-gray-200 bg-white"
+                        className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
                       />
                     )}
                   />
@@ -410,7 +411,7 @@ export const RecruitmentForm = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Hạn nộp hồ sơ
                 </label>
                 <Controller
@@ -420,7 +421,7 @@ export const RecruitmentForm = ({
                     <Input
                       type="datetime-local"
                       {...field}
-                      className="h-11 rounded-xl border-gray-200 bg-white"
+                      className="h-11 rounded-xl border-slate-200 bg-white focus:border-[#0F6B66]/40"
                     />
                   )}
                 />
@@ -432,7 +433,7 @@ export const RecruitmentForm = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-slate-700">
                   Trạng thái
                 </label>
                 <Controller
@@ -440,7 +441,7 @@ export const RecruitmentForm = ({
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-11 w-full rounded-xl border-gray-200 bg-white">
+                      <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -457,9 +458,9 @@ export const RecruitmentForm = ({
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-gray-200">
+          <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-slate-100 rounded-2xl">
             <CardContent className="p-5 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-slate-700">
                 Ảnh bìa
               </label>
               <Controller

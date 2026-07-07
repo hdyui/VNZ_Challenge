@@ -22,6 +22,7 @@ import { useAuthStore } from "@/features/auth/store";
 
 const NAV_LINKS = [
   { to: "/", label: "Trang chủ" },
+  { to: "/about", label: "Giới thiệu" },
   { to: "/news", label: "Tin tức" },
   { to: "/recruitments", label: "Tuyển dụng" },
 ];
@@ -58,7 +59,7 @@ const MainLayout = () => {
       };
     }
     return {
-      to: "/employee",
+      to: "/logout",
       label: "Hồ sơ của tôi",
       icon: <UserCircle className="w-4 h-4 mr-2" />,
     };

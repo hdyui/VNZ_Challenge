@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Employee";
+export type UserRole = "Admin" | "Employee" | "Applicant";
 export type AccountStatus = "Active" | "Inactive";
 
 export interface RequireAuthProps {

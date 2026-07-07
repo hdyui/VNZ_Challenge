@@ -84,7 +84,7 @@ const RecruitmentUpdatePage = () => {
                 type="button"
                 variant="outline"
                 disabled={isDeleting}
-                className="gap-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                className="gap-2 border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
               >
                 {isDeleting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -104,7 +104,7 @@ const RecruitmentUpdatePage = () => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-gray-200">
+                <AlertDialogCancel className="border-slate-200">
                   Hủy
                 </AlertDialogCancel>
                 <AlertDialogAction
@@ -113,7 +113,7 @@ const RecruitmentUpdatePage = () => {
                     handleDelete();
                   }}
                   disabled={isDeleting}
-                  className="bg-red-500 hover:bg-red-600 text-white"
+                  className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
                 >
                   Đồng ý xóa
                 </AlertDialogAction>

@@ -12,6 +12,9 @@ import {
   Menu,
   Search,
   User,
+  Clock,
+  CalendarClock,
+  ExternalLink,
 } from "lucide-react";
 import { useLogoutMutation, useUser } from "@/features/auth/hooks/useAuth";
 
@@ -36,6 +39,18 @@ const navItems = [
     icon: Briefcase,
     end: false,
   },
+  {
+    to: "/admin/shifts",
+    label: "Shifts",
+    icon: Clock,
+    end: false,
+  },
+  {
+    to: "/admin/schedules",
+    label: "Work Schedules",
+    icon: CalendarClock,
+    end: false,
+  },
 ];
 
 const AdminMainLayout = () => {
@@ -50,7 +65,7 @@ const AdminMainLayout = () => {
     refetch, // Func để re-fetch
     isFetching, // true = đang fetch ( dù có hay không data )
   } = useUser();
-  console.log(user);
+  // console.log(user);
   const handleLogout = async () => {
     useHandleLogout.mutate();
   };
@@ -148,6 +163,11 @@ const AdminMainLayout = () => {
             <Button variant="ghost" className="p-2">
               <Menu className="w-5 h-5" />
             </Button>
+            <Link to="/">
+              <Button variant="ghost" className="p-2" title="Về trang chủ">
+                <ExternalLink className="w-5 h-5" />
+              </Button>
+            </Link>
           </div>
 
           <div className="flex items-center gap-4 w-full">
@@ -160,6 +180,16 @@ const AdminMainLayout = () => {
             </div>
 
             <div className="ml-auto flex items-center gap-3">
+              <Link to="/">
+                <Button
+                  variant="outline"
+                  className="hidden sm:flex items-center gap-2 text-gray-600"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Về trang chủ
+                </Button>
+              </Link>
+
               <Button variant="ghost" className="p-2">
                 <Bell className="w-5 h-5" />
               </Button>

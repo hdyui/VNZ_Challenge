@@ -1,39 +1,65 @@
+// src/pages/PublicNewsPage.tsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // Hoặc 'next/link' nếu bạn dùng Next.js
-import { usePublicNewsList } from "@/features/publicNews/hooks/usePublicNewsList"; // Điều chỉnh lại đường dẫn import nếu cần
-import { useDebounce } from "@/shared/hooks/useDebounce"; // Giả sử bạn có 1 custom hook để debounce search
+import { Link } from "react-router-dom";
+import {
+  usePublicNewsList,
+  useNewsViews,
+} from "@/features/publicNews/hooks/usePublicNewsList";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { Eye } from "lucide-react"; // Import icon Eye
+import { useCurrentUserRole } from "@/features/auth/hooks/useCurrentUserRole";
+import { getAllowedNewsTypes } from "@/features/publicNews/types";
+import type { NewsType } from "@/features/publicNews/types";
+import {
+  NewsStatusBadge,
+  NewsTypeBadge,
+} from "@/features/publicNews/components/NewsBadge";
 
 const PublicNewsPage = () => {
-  // ─── States ──────────────────────────────────────────────────────────────────
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(9); // Số item trên mỗi trang
+  const [limit] = useState<number>(9);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<NewsType | "all">("all");
 
-  // Debounce search để tránh call API liên tục khi user đang gõ phím
-  // Nếu chưa có hook này, bạn có thể truyền thẳng searchTerm vào API hoặc tự viết logic setTimeout
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  // ─── Fetch Data ─────────────────────────────────────────────────────────────
+  // Role hiện tại (Anonymous/Applicant/Employee/Admin) quyết định được xem loại tin nào.
+  const role = useCurrentUserRole();
+  const allowedTypes = getAllowedNewsTypes(role);
+  const canFilterByType = allowedTypes.length > 1; // chỉ Employee/Admin mới có bộ lọc này
+
   const { data, isLoading, isError } = usePublicNewsList({
     page,
     limit,
     search: debouncedSearch,
   });
+
+  // Gọi API lấy danh sách views
+  const { data: viewsData } = useNewsViews();
+  console.log(`view ne: ${viewsData}`);
+
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, typeFilter]);
 
-  const newsList = data?.value?.items || [];
+  // Lọc theo quyền của role trước (an toàn phía FE, phòng khi BE trả dư),
+  // sau đó lọc tiếp theo lựa chọn của người dùng trong dropdown.
+  const newsList = (data?.value?.items || [])
+    .filter((news) => allowedTypes.includes(news.type))
+    .filter((news) => typeFilter === "all" || news.type === typeFilter);
   const totalPages = data?.value
     ? Math.ceil(data.value.totalCount / data.value.pageSize)
     : 0;
 
-  const pagination = data?.value
-    ? {
-        page: data.value.pageIndex,
-        totalPages,
-      }
-    : null;
+  // Xử lý lấy view từ danh sách (tương thích nhiều định dạng trả về của BE)
+  const getNewsViewCount = (newsId: string) => {
+    const items = viewsData?.value?.items;
+    if (!Array.isArray(items)) return 0;
+
+    const item = items.find((v: any) => v.newsId === newsId);
+    return item?.publicViewCount ?? 0;
+  };
+
   if (isError) {
     return (
       <div className="flex justify-center items-center h-64 text-red-500">
@@ -46,14 +72,28 @@ const PublicNewsPage = () => {
     <div className="container mx-auto px-4 py-8">
       {/* ─── Header & Search ─── */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">
+        <h1 className="text-3xl font-bold text-slate-900">
           Tin tức doanh nghiệp
         </h1>
-        <div className="w-full md:w-1/3">
+        <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
+          {/* Chỉ Employee/Admin mới thấy được tin Internal nên chỉ họ mới cần bộ lọc này */}
+          {canFilterByType && (
+            <select
+              value={typeFilter}
+              onChange={(e) =>
+                setTypeFilter(e.target.value as NewsType | "all")
+              }
+              className="px-4 py-2 border border-slate-300 rounded-full focus:outline-none focus:border-[#0F6B66] focus:ring-4 focus:ring-[#0F6B66]/20 transition-all text-slate-700 shadow-sm shadow-slate-200/60 bg-white"
+            >
+              <option value="all">Tất cả loại tin</option>
+              <option value="Public">Công khai</option>
+              <option value="Internal">Nội bộ</option>
+            </select>
+          )}
           <input
             type="text"
             placeholder="Tìm kiếm tiêu đề bài viết..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full md:w-72 px-4 py-2 border border-slate-300 rounded-full focus:outline-none focus:border-[#0F6B66] focus:ring-4 focus:ring-[#0F6B66]/20 transition-all text-slate-700 shadow-sm shadow-slate-200/60"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -63,10 +103,10 @@ const PublicNewsPage = () => {
       {/* ─── News Grid ─── */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0F6B66]"></div>
         </div>
       ) : newsList.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
+        <div className="text-center text-slate-500 py-12">
           Không tìm thấy bài viết nào phù hợp.
         </div>
       ) : (
@@ -74,33 +114,58 @@ const PublicNewsPage = () => {
           {newsList.map((news) => (
             <div
               key={news.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              className="bg-white rounded-2xl shadow-sm shadow-slate-200/60 overflow-hidden hover:shadow-lg hover:shadow-[#0F6B66]/15 transition-all duration-300 border border-slate-200 flex flex-col"
             >
-              <Link to={`/news/${news.slug}`}>
-                {/* Fallback image nếu coverImg bị null */}
-                <img
-                  src={
-                    news.coverImg ||
-                    "https://via.placeholder.com/400x250?text=No+Image"
-                  }
-                  alt={news.title}
-                  className="w-full h-48 object-cover"
-                  loading="lazy"
-                />
-                <div className="p-4">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2 line-clamp-2">
+              <Link
+                to={`/news/${news.slug}`}
+                className="group flex flex-col h-full"
+              >
+                <div className="overflow-hidden">
+                  <img
+                    src={
+                      news.coverImg ||
+                      "https://via.placeholder.com/400x250?text=No+Image"
+                    }
+                    alt={news.title}
+                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5 flex-1 flex flex-col">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <NewsStatusBadge status={news.status} />
+                    {/* Chỉ hiện badge loại tin khi có thể có nhiều loại (Employee/Admin) */}
+                    {canFilterByType && <NewsTypeBadge type={news.type} />}
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900 mb-2 line-clamp-2 group-hover:text-[#0F6B66] transition-colors">
                     {news.title}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-4">
-                    {new Date(news.publishedAt).toLocaleDateString("vi-VN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                  <span className="text-blue-600 font-medium hover:underline">
-                    Đọc tiếp &rarr;
-                  </span>
+
+                  {/* Hiển thị Ngày đăng & Số lượt xem */}
+                  <div className="flex justify-between items-center text-sm text-slate-500 mb-4 font-mono tabular-nums flex-1">
+                    <span>
+                      {news.publishedAt
+                        ? new Date(news.publishedAt).toLocaleDateString(
+                            "vi-VN",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )
+                        : "Chưa đăng"}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Eye className="h-4 w-4" />
+                      {getNewsViewCount(news.id).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-end mt-auto pt-2">
+                    <span className="inline-flex items-center justify-center h-9 px-4 rounded-lg text-slate-500 group-hover:text-[#0F6B66] group-hover:bg-[#0F6B66]/10 transition-colors text-sm font-medium">
+                      Đọc tiếp &rarr;
+                    </span>
+                  </div>
                 </div>
               </Link>
             </div>
@@ -114,16 +179,16 @@ const PublicNewsPage = () => {
           <button
             onClick={() => setPage((old) => Math.max(old - 1, 1))}
             disabled={!data?.value?.hasPreviousPage}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
               !data?.value?.hasPreviousPage
-                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:text-[#0F6B66]"
             }`}
           >
             Trước
           </button>
 
-          <span className="text-sm font-medium px-4">
+          <span className="text-sm font-medium px-4 text-slate-700 font-mono tabular-nums">
             Trang {data?.value?.pageIndex} / {totalPages}
           </span>
 
@@ -132,10 +197,10 @@ const PublicNewsPage = () => {
               setPage((old) => (data?.value?.hasNextPage ? old + 1 : old))
             }
             disabled={!data?.value?.hasNextPage}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
               !data?.value?.hasNextPage
-                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:text-[#0F6B66]"
             }`}
           >
             Sau

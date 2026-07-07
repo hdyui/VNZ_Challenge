@@ -23,9 +23,11 @@ export const publicKeys = {
       [...publicKeys.news.lists(), params] as const,
     detail: (slug: string) => [...publicKeys.news.all, "detail", slug] as const,
   },
+  views: {
+    all: ["news-views"] as const,
+    detail: (newsId: string) => [...publicKeys.views.all, newsId] as const,
+  },
   comments: {
-    // Prefix chung cho 1 bài viết -> dùng để invalidate cả root list lẫn
-    // mọi list replies cùng lúc (TanStack Query match theo prefix mặc định).
     all: (newsId: string) => ["news-comments", newsId] as const,
     list: (newsId: string, params?: NewsCommentsQueryParams) =>
       [...publicKeys.comments.all(newsId), params ?? {}] as const,
@@ -50,6 +52,8 @@ export const usePublicNewsList = (params?: PublicNewsQueryParams) => {
 
 // ─── GET /api/v1/news/:slug + tự động gọi POST /api/v1/news/:id/view ──────────
 export const usePublicNewsDetail = (slug: string) => {
+  const queryClient = useQueryClient();
+
   const query = useQuery({
     queryKey: publicKeys.news.detail(slug),
     queryFn: () => publicApi.getNewsBySlug(slug),
@@ -58,27 +62,56 @@ export const usePublicNewsDetail = (slug: string) => {
 
   const newsId = (query.data as any)?.value?.id as string | undefined;
 
-  // Chỉ gọi 1 lần cho mỗi newsId trong vòng đời component, kể cả khi
-  // React StrictMode chạy effect 2 lần ở môi trường dev.
   const trackedNewsIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!newsId || trackedNewsIdRef.current === newsId) return;
     trackedNewsIdRef.current = newsId;
 
-    publicApi.increaseNewsView(newsId).catch(() => {
-      // Không chặn trải nghiệm đọc bài nếu ghi nhận view thất bại.
-      console.warn("Không thể ghi nhận lượt xem cho bài viết:", newsId);
-    });
-  }, [newsId]);
+    publicApi
+      .increaseNewsView(newsId)
+      .then(() => {
+        // Cập nhật lạc quan viewCount (tùy chọn)
+        queryClient.setQueryData(publicKeys.news.detail(slug), (old: any) => {
+          if (!old?.value) return old;
+          return {
+            ...old,
+            value: {
+              ...old.value,
+              viewCount: (old.value.viewCount ?? 0) + 1,
+            },
+          };
+        });
+        // Cập nhật lại view detail sau khi tăng view
+        queryClient.invalidateQueries({
+          queryKey: publicKeys.views.detail(newsId),
+        });
+      })
+      .catch(() => {
+        console.warn("Không thể ghi nhận lượt xem cho bài viết:", newsId);
+      });
+  }, [newsId, slug, queryClient]);
 
   return query;
 };
 
+// ─── HOOKS LẤY LƯỢT XEM (MỚI) ────────────────────────────────────────────────
+export const useNewsViews = () => {
+  return useQuery({
+    queryKey: publicKeys.views.all,
+    queryFn: () => publicApi.getNewsViews(),
+  });
+};
+
+export const useNewsViewDetail = (newsId?: string) => {
+  return useQuery({
+    queryKey: publicKeys.views.detail(newsId ?? ""),
+    queryFn: () => publicApi.getNewsViewDetail(newsId!),
+    enabled: !!newsId,
+  });
+};
+
 // ─── GET /api/v1/news/:newsId/comments ──────────────────────────────────────────
-// Dùng chung cho cả 2 trường hợp:
-//  - Lấy comment gốc:  useNewsComments(newsId, { page, pageSize })
-//  - Lấy reply của 1 comment gốc: useNewsComments(newsId, { parentCommentId, page, pageSize })
 export const useNewsComments = (
   newsId: string,
   params?: NewsCommentsQueryParams,
@@ -87,10 +120,7 @@ export const useNewsComments = (
   return useQuery({
     queryKey: publicKeys.comments.list(newsId, params),
     queryFn: () => publicApi.getComments(newsId, params),
-    // Mặc định chỉ cần có newsId là fetch (dùng cho comment gốc). Khi dùng để
-    // lazy-load replies, truyền enabled: false cho tới khi người dùng mở ra.
     enabled: !!newsId && (options?.enabled ?? true),
-    // Giữ data trang cũ khi đổi trang/param để tránh nháy loading toàn màn hình.
     placeholderData: keepPreviousData,
   });
 };
@@ -103,8 +133,6 @@ export const useCreateComment = (newsId: string) => {
     mutationFn: (payload: CreateCommentPayload) =>
       publicApi.createComment(newsId, payload),
     onSuccess: () => {
-      // Comment mới có thể là root hoặc reply của 1 comment cụ thể -> invalidate
-      // toàn bộ cache comments của bài viết này (mọi biến thể phân trang/parentId).
       queryClient.invalidateQueries({
         queryKey: publicKeys.comments.all(newsId),
       });
@@ -112,21 +140,46 @@ export const useCreateComment = (newsId: string) => {
   });
 };
 
-// // ─── GET /public/recruitments ─────────────────────────────────────────────────
-// export const usePublicRecruitmentList = (
-//   params?: PublicRecruitmentQueryParams,
-// ) => {
-//   return useQuery({
-//     queryKey: publicKeys.recruitments.list(params ?? {}),
-//     queryFn: () => publicApi.getRecruitmentList(params),
-//   });
-// };
+// ─── PATCH /api/v1/news/:newsId/comments/:commentId/hide ────────────────────────
+export const useHideComment = (newsId: string) => {
+  const queryClient = useQueryClient();
 
-// // ─── GET /public/recruitments/:id ────────────────────────────────────────────
-// export const usePublicRecruitmentDetail = (id: string) => {
-//   return useQuery({
-//     queryKey: publicKeys.recruitments.detail(id),
-//     queryFn: () => publicApi.getRecruitmentById(id),
-//     enabled: !!id,
-//   });
-// };
+  return useMutation({
+    mutationFn: (commentId: string) => publicApi.hideComment(newsId, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: publicKeys.comments.all(newsId),
+      });
+    },
+  });
+};
+
+// ─── PATCH /api/v1/news/:newsId/comments/:commentId/unhide ──────────────────────
+export const useUnhideComment = (newsId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (commentId: string) =>
+      publicApi.unhideComment(newsId, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: publicKeys.comments.all(newsId),
+      });
+    },
+  });
+};
+
+// ─── DELETE /api/v1/news/:newsId/comments/:commentId ────────────────────────────
+export const useDeleteComment = (newsId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (commentId: string) =>
+      publicApi.deleteComment(newsId, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: publicKeys.comments.all(newsId),
+      });
+    },
+  });
+};
