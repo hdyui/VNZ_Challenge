@@ -47,6 +47,8 @@ export const usePublicNewsList = (params?: PublicNewsQueryParams) => {
   return useQuery({
     queryKey: publicKeys.news.list(params ?? {}),
     queryFn: () => publicApi.getNewsList(params),
+    // Luôn gọi lại API mỗi khi quay lại trang, không phụ thuộc cache còn "fresh" hay không
+    refetchOnMount: "always",
   });
 };
 
@@ -61,11 +63,19 @@ export const usePublicNewsDetail = (slug: string) => {
   });
 
   const newsId = (query.data as any)?.value?.id as string | undefined;
+  const newsType = (query.data as any)?.value?.type as string | undefined;
 
   const trackedNewsIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!newsId || trackedNewsIdRef.current === newsId) return;
+    // Tin nội bộ (Internal) không được tăng view -> không gọi API
+    if (
+      !newsId ||
+      newsType === "Internal" ||
+      trackedNewsIdRef.current === newsId
+    ) {
+      return;
+    }
     trackedNewsIdRef.current = newsId;
 
     publicApi
@@ -90,7 +100,7 @@ export const usePublicNewsDetail = (slug: string) => {
       .catch(() => {
         console.warn("Không thể ghi nhận lượt xem cho bài viết:", newsId);
       });
-  }, [newsId, slug, queryClient]);
+  }, [newsId, newsType, slug, queryClient]);
 
   return query;
 };
@@ -100,6 +110,8 @@ export const useNewsViews = () => {
   return useQuery({
     queryKey: publicKeys.views.all,
     queryFn: () => publicApi.getNewsViews(),
+    // Luôn gọi lại API mỗi khi quay lại trang để lấy viewCount mới nhất
+    refetchOnMount: "always",
   });
 };
 

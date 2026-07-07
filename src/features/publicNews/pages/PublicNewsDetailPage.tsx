@@ -30,11 +30,20 @@ const PublicNewsDetailPage = () => {
   const news =
     fetchedNews && canViewNewsType(role, fetchedNews.type) ? fetchedNews : null;
 
-  // Gọi API lấy view count độc lập
-  const { data: viewData } = useNewsViewDetail(news?.id);
+  // Tin nội bộ (Internal) không tăng/không hiển thị view theo endpoint /views riêng
+  const isInternalNews = news?.type === "Internal";
 
-  // Logic lấy viewCount từ endpoint /views, fallback về dữ liệu cũ nếu chưa tải xong
-  const currentViewCount = viewData?.value.publicViewCount;
+  // Chỉ gọi API lấy view count độc lập khi KHÔNG phải tin nội bộ.
+  // Hook vẫn luôn được gọi (đúng rule of hooks) nhưng enabled sẽ tự tắt khi newsId undefined.
+  const { data: viewData } = useNewsViewDetail(
+    !isInternalNews ? news?.id : undefined,
+  );
+
+  // Logic lấy viewCount: tin nội bộ dùng viewCount có sẵn từ news,
+  // các tin khác dùng publicViewCount từ endpoint /views, fallback về dữ liệu cũ nếu chưa tải xong
+  const currentViewCount = isInternalNews
+    ? (news?.viewCount ?? 0)
+    : (viewData?.value?.publicViewCount ?? news?.viewCount ?? 0);
 
   if (isError) {
     return (
